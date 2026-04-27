@@ -1,0 +1,30 @@
+# ComfyPack - Extra Model Paths
+# Models are loaded from the host's mounted /models directory
+# Users should organize their models folder like this:
+#
+# /models/
+# ├── checkpoints/
+# ├── loras/
+# ├── controlnet/
+# ├── ipadapter/
+# ├── clip/
+# ├── clip_vision/
+# ├── upscale_models/
+# ├── ultralytics/
+# ├── vae/
+# ├── unet/
+# └── taggers/
+
+comfypack_models:
+  base_path: /models
+  checkpoints: checkpoints/
+  loras: loras/
+  controlnet: controlnet/
+  ipadapter: ipadapter/
+  clip: clip/
+  clip_vision: clip_vision/
+  upscale_models: upscale_models/
+  ultralytics: bbox/
+  vae: vae/
+  unet: unet/
+  taggers: taggers/

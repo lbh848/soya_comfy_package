@@ -1,0 +1,41 @@
+# Environment
+.env
+
+# Claude Code
+.claude/
+claude.md
+
+# Project docs (private)
+요구사항/
+
+# Models (large files, downloaded separately)
+models/bbox/*
+models/checkpoints/*
+models/clip/*
+models/clip_vision/*
+models/controlnet/*
+models/ipadapter/*
+models/loras/*
+models/taggers/*
+models/unet/*
+models/upscale_models/*
+models/vae/*
+!models/**/.gitkeep
+
+# Patch data (community-only, distributed separately)
+patch_data/asset/*
+patch_data/asset_data/*
+patch_data/auto_complete/*
+patch_data/chain_presets/*
+patch_data/customprompt/*
+patch_data/mode_workflow/*
+patch_data/pose_data/*
+patch_data/workflow/*
+!patch_data/**/.gitkeep
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker volumes
+docker_data/
