@@ -1,6 +1,9 @@
 # Environment
 .env
 
+# User config (use config.example.json as template)
+config/config.json
+
 # Claude Code
 .claude/
 claude.md
