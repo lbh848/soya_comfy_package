@@ -6,7 +6,7 @@ services:
     build:
       context: ./comfyui
       dockerfile: Dockerfile
-    image: leebyunghyun/comfypack-comfyui:latest
+    image: soya/comfypack-comfyui:latest
     ports:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
@@ -31,7 +31,7 @@ services:
     build:
       context: ./hooking_server
       dockerfile: Dockerfile
-    image: leebyunghyun/comfypack-hooking:latest
+    image: soya/comfypack-hooking:latest
     ports:
       - "${HOOKING_PORT:-8189}:8189"
     volumes:
