@@ -110,6 +110,18 @@ echo [OK] 초기 설정이 완료되었습니다.
 
 :skip_env
 
+:: ─── WSL2 메모리 설정 ─────────────────────────────────────
+set "WSLCONFIG_SRC=%PROJECT_DIR%\config\wslconfig"
+set "WSLCONFIG_DST=%USERPROFILE%\.wslconfig"
+if exist "%WSLCONFIG_SRC%" (
+    if not exist "%WSLCONFIG_DST%" (
+        copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
+        echo [OK] WSL2 메모리 설정 적용 (16GB). Docker 재시작 시 반영됩니다.
+    ) else (
+        echo [OK] 기존 WSL2 설정이 있습니다: %WSLCONFIG_DST%
+    )
+)
+
 :: ─── 메인 메뉴 ──────────────────────────────────────────
 :menu
 echo.
