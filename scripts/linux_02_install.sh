@@ -160,11 +160,15 @@ while true; do
         1)
             echo "Building Docker images..."
             docker compose -f "$PROJECT_DIR/docker-compose.yml" build --no-cache
+            echo "Cleaning up unused old images..."
+            docker image prune -f
             ok "Build complete!"
             ;;
         2)
             echo "Pulling images from Docker Hub..."
             docker compose -f "$PROJECT_DIR/docker-compose.yml" pull
+            echo "Cleaning up unused old images..."
+            docker image prune -f
             ok "Download complete!"
             ;;
         3)

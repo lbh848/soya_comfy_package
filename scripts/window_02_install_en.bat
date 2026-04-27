@@ -133,6 +133,9 @@ docker compose -f "%PROJECT_DIR%\docker-compose.yml" build --no-cache
 if %errorlevel%==0 (
     echo.
     echo [OK] Image build complete!
+    echo.
+    echo Cleaning up unused old images...
+    docker image prune -f
 ) else (
     echo.
     echo [X] Image build failed. Check the error messages above.
@@ -148,6 +151,9 @@ docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull
 if %errorlevel%==0 (
     echo.
     echo [OK] Image download complete!
+    echo.
+    echo Cleaning up unused old images...
+    docker image prune -f
 ) else (
     echo.
     echo [X] Image download failed.

@@ -145,6 +145,9 @@ docker compose -f "%PROJECT_DIR%\docker-compose.yml" build --no-cache
 if %errorlevel%==0 (
     echo.
     echo [OK] 이미지 빌드가 완료되었습니다!
+    echo.
+    echo 사용하지 않는 이전 이미지를 정리합니다...
+    docker image prune -f
 ) else (
     echo.
     echo [X] 이미지 빌드에 실패했습니다. 오류 메시지를 확인하세요.
@@ -161,6 +164,9 @@ docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull
 if %errorlevel%==0 (
     echo.
     echo [OK] 이미지 다운로드가 완료되었습니다!
+    echo.
+    echo 사용하지 않는 이전 이미지를 정리합니다...
+    docker image prune -f
 ) else (
     echo.
     echo [X] 이미지 다운로드에 실패했습니다.
