@@ -118,7 +118,11 @@ if exist "%WSLCONFIG_SRC%" (
         copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
         echo [OK] WSL2 memory limit applied (16GB). Takes effect on Docker restart.
     ) else (
-        echo [OK] Existing WSL2 config found: %WSLCONFIG_DST%
+        fc "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul 2>&1
+        if !errorlevel! neq 0 (
+            copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
+            echo [OK] WSL2 memory config updated. Takes effect on Docker restart.
+        )
     )
 )
 

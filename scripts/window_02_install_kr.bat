@@ -118,7 +118,11 @@ if exist "%WSLCONFIG_SRC%" (
         copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
         echo [OK] WSL2 메모리 설정 적용 (16GB). Docker 재시작 시 반영됩니다.
     ) else (
-        echo [OK] 기존 WSL2 설정이 있습니다: %WSLCONFIG_DST%
+        fc "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul 2>&1
+        if !errorlevel! neq 0 (
+            copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
+            echo [OK] WSL2 메모리 설정이 업데이트되었습니다. Docker 재시작 시 반영됩니다.
+        )
     )
 )
 
