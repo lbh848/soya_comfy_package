@@ -121,18 +121,20 @@ echo   2. Docker Hub에서 이미지 다운로드 (권장)
 echo   3. ComfyPack 시작
 echo   4. ComfyPack 중지
 echo   5. 상태 확인
-echo   6. 설정 초기화 (.env 재설정)
+echo   6. 업데이트 (최신 버전으로)
+echo   7. 설정 초기화 (.env 재설정)
 echo   0. 종료
 echo.
 set "CHOICE="
-set /p "CHOICE=선택하세요 [0-6]: "
+set /p "CHOICE=선택하세요 [0-7]: "
 
 if "%CHOICE%"=="1" goto build
 if "%CHOICE%"=="2" goto pull
 if "%CHOICE%"=="3" goto start
 if "%CHOICE%"=="4" goto stop
 if "%CHOICE%"=="5" goto status
-if "%CHOICE%"=="6" goto reset
+if "%CHOICE%"=="6" goto update
+if "%CHOICE%"=="7" goto reset
 if "%CHOICE%"=="0" exit /b 0
 goto menu
 
@@ -225,5 +227,41 @@ goto menu
 echo.
 del "%ENV_FILE%" 2>nul
 echo [OK] .env 파일이 삭제되었습니다. 다음 실행 시 다시 설정합니다.
+pause
+goto menu
+
+:: ─── 업데이트 ──────────────────────────────────────────
+:update
+echo.
+echo ══════════════════════════════════════════════════════
+echo    ComfyPack 업데이트
+echo ══════════════════════════════════════════════════════
+echo.
+
+echo [1/4] 최신 코드를 다운로드합니다...
+git -C "%PROJECT_DIR%" pull
+if %errorlevel% neq 0 (
+    echo.
+    echo [X] 코드 업데이트에 실패했습니다.
+    echo     Git이 설치되어 있지 않거나, Git 저장소가 아닐 수 있습니다.
+    echo     수동으로 다운로드하여 덮어씌워주세요.
+    pause
+    goto menu
+)
+
+echo.
+echo [2/4] 최신 Docker 이미지를 다운로드합니다...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull
+
+echo.
+echo [3/4] 이전 이미지를 정리합니다...
+docker image prune -f
+
+echo.
+echo [4/4] ComfyPack을 재시작합니다...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
+
+echo.
+echo [OK] 업데이트가 완료되었습니다!
 pause
 goto menu

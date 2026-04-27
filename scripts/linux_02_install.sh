@@ -151,10 +151,11 @@ while true; do
     echo "  3. Start ComfyPack"
     echo "  4. Stop ComfyPack"
     echo "  5. Check status"
-    echo "  6. Reset settings"
+    echo "  6. Update to latest version"
+    echo "  7. Reset settings"
     echo "  0. Exit"
     echo ""
-    read -p "Select [0-6]: " CHOICE
+    read -p "Select [0-7]: " CHOICE
 
     case "$CHOICE" in
         1)
@@ -192,6 +193,27 @@ while true; do
             docker compose -f "$PROJECT_DIR/docker-compose.yml" ps
             ;;
         6)
+            echo "===================================================="
+            echo "   ComfyPack Update"
+            echo "===================================================="
+            echo ""
+            echo "[1/4] Downloading latest code..."
+            if ! git -C "$PROJECT_DIR" pull; then
+                fail "Code update failed. Not a Git repository?"
+                continue
+            fi
+            echo ""
+            echo "[2/4] Downloading latest Docker images..."
+            docker compose -f "$PROJECT_DIR/docker-compose.yml" pull
+            echo ""
+            echo "[3/4] Cleaning up old images..."
+            docker image prune -f
+            echo ""
+            echo "[4/4] Restarting ComfyPack..."
+            docker compose -f "$PROJECT_DIR/docker-compose.yml" up -d
+            ok "Update complete!"
+            ;;
+        7)
             rm -f "$ENV_FILE"
             ok ".env deleted. Run again to reconfigure."
             ;;

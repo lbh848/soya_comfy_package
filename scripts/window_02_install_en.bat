@@ -110,18 +110,20 @@ echo   2. Pull images from Docker Hub (recommended)
 echo   3. Start ComfyPack
 echo   4. Stop ComfyPack
 echo   5. Check status
-echo   6. Reset settings (reconfigure .env)
+echo   6. Update to latest version
+echo   7. Reset settings (reconfigure .env)
 echo   0. Exit
 echo.
 set "CHOICE="
-set /p "CHOICE=Select [0-6]: "
+set /p "CHOICE=Select [0-7]: "
 
 if "%CHOICE%"=="1" goto build
 if "%CHOICE%"=="2" goto pull
 if "%CHOICE%"=="3" goto start
 if "%CHOICE%"=="4" goto stop
 if "%CHOICE%"=="5" goto status
-if "%CHOICE%"=="6" goto reset
+if "%CHOICE%"=="6" goto update
+if "%CHOICE%"=="7" goto reset
 if "%CHOICE%"=="0" exit /b 0
 goto menu
 
@@ -208,5 +210,41 @@ goto menu
 echo.
 del "%ENV_FILE%" 2>nul
 echo [OK] .env file deleted. You will be prompted again on next run.
+pause
+goto menu
+
+:: ─── Update ──────────────────────────────────────────────
+:update
+echo.
+echo ====================================================
+echo    ComfyPack Update
+echo ====================================================
+echo.
+
+echo [1/4] Downloading latest code...
+git -C "%PROJECT_DIR%" pull
+if %errorlevel% neq 0 (
+    echo.
+    echo [X] Code update failed.
+    echo     Git may not be installed, or this is not a Git repository.
+    echo     Please download manually and overwrite files.
+    pause
+    goto menu
+)
+
+echo.
+echo [2/4] Downloading latest Docker images...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull
+
+echo.
+echo [3/4] Cleaning up old images...
+docker image prune -f
+
+echo.
+echo [4/4] Restarting ComfyPack...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
+
+echo.
+echo [OK] Update complete!
 pause
 goto menu
