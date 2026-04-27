@@ -229,6 +229,12 @@ goto menu
 :: ─── 설정 초기화 ────────────────────────────────────────
 :reset
 echo.
+echo [!] .env 파일을 삭제하시겠습니까?
+echo     다음 실행 시 기본값으로 다시 생성됩니다.
+echo.
+set "CONFIRM_RESET="
+set /p "CONFIRM_RESET=삭제하시겠습니까? (y/N): "
+if /i not "%CONFIRM_RESET%"=="y" goto menu
 del "%ENV_FILE%" 2>nul
 echo [OK] .env 파일이 삭제되었습니다. 다음 실행 시 다시 설정합니다.
 pause

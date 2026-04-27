@@ -218,8 +218,15 @@ while true; do
             ok "Update complete!"
             ;;
         7)
-            rm -f "$ENV_FILE"
-            ok ".env deleted. Run again to reconfigure."
+            echo ""
+            echo "[!] Delete .env file?"
+            echo "    It will be regenerated with defaults on next run."
+            echo ""
+            read -p "Are you sure? (y/N): " CONFIRM_RESET
+            if [ "$CONFIRM_RESET" = "y" ] || [ "$CONFIRM_RESET" = "Y" ]; then
+                rm -f "$ENV_FILE"
+                ok ".env deleted. Run again to reconfigure."
+            fi
             ;;
         8)
             echo "Removing ComfyPack (containers)..."

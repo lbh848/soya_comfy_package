@@ -221,8 +221,14 @@ goto menu
 
 :reset
 echo.
+echo [!] Delete .env file?
+echo     It will be regenerated with defaults on next run.
+echo.
+set "CONFIRM_RESET="
+set /p "CONFIRM_RESET=Are you sure? (y/N): "
+if /i not "%CONFIRM_RESET%"=="y" goto menu
 del "%ENV_FILE%" 2>nul
-echo [OK] .env file deleted. You will be prompted again on next run.
+echo [OK] .env file deleted. Run again to reconfigure.
 pause
 goto menu
 
