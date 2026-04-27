@@ -9,6 +9,17 @@ echo    ComfyPack 설치 프로그램
 echo    ComfyUI + Hooking Server Docker 배포
 echo ══════════════════════════════════════════════════════
 echo.
+echo    신규 설치: 2 =^> 3
+echo    업데이트:  6
+echo.
+echo    나머지 메뉴:
+echo      1 - 직접 이미지 빌드 (느림, 인터넷 안 될 때)
+echo      4 - ComfyPack(컨테이너) 중지
+echo      5 - 실행 상태 확인
+echo      7 - 설정 초기화 (.env 삭제 후 재생성)
+echo.
+echo ══════════════════════════════════════════════════════
+echo.
 
 :: ─── Docker 확인 ────────────────────────────────────────
 where docker >nul 2>&1
@@ -47,35 +58,20 @@ echo.
 set "ENV_FILE=%PROJECT_DIR%\.env"
 set "CONFIG_DIR=%PROJECT_DIR%\config"
 
+:: 고정 경로 (패키지 내부)
+set "MODEL_DIR=%PROJECT_DIR%\models"
+set "PATCH_DIR=%PROJECT_DIR%\patch_data"
+set "CONFIG_FILE=%CONFIG_DIR%\config.json"
+
+:: 경로의 백슬래시를 슬래시로 변환 (Docker Compose용)
+set "MODEL_PATH_DOCKER=!MODEL_DIR:\=/!"
+set "PATCH_PATH_DOCKER=!PATCH_DIR:\=/!"
+set "CONFIG_PATH_DOCKER=!CONFIG_FILE:\=/!"
+
 if not exist "%ENV_FILE%" (
     echo.
     echo ─── 초기 설정 ──────────────────────────────────────
     echo.
-
-    :: 모델 경로 입력
-    set "MODEL_INPUT="
-    set /p "MODEL_INPUT=모델 파일이 있는 폴더 경로를 입력하세요 (기본값: %PROJECT_DIR%\models): "
-    if "!MODEL_INPUT!"=="" set "MODEL_INPUT=%PROJECT_DIR%\models"
-
-    :: 패치 데이터 경로 입력
-    set "PATCH_INPUT="
-    set /p "PATCH_INPUT=패치 데이터 폴더 경로를 입력하세요 (기본값: %PROJECT_DIR%\patch_data): "
-    if "!PATCH_INPUT!"=="" set "PATCH_INPUT=%PROJECT_DIR%\patch_data"
-
-    :: config.json 경로
-    set "CONFIG_INPUT="
-    set /p "CONFIG_INPUT=config.json 경로를 입력하세요 (기본값: %PROJECT_DIR%\config\config.json): "
-    if "!CONFIG_INPUT!"=="" set "CONFIG_INPUT=%PROJECT_DIR%\config\config.json"
-    if not exist "!CONFIG_INPUT!" (
-        if not exist "!CONFIG_INPUT!\.." mkdir "!CONFIG_INPUT!\.."
-        echo {} > "!CONFIG_INPUT!"
-        echo [OK] 빈 config.json 파일을 생성했습니다.
-    )
-
-    :: 경로의 백슬래시를 슬래시로 변환 (Docker Compose용)
-    set "MODEL_PATH_DOCKER=!MODEL_INPUT:\=/!"
-    set "PATCH_PATH_DOCKER=!PATCH_INPUT:\=/!"
-    set "CONFIG_PATH_DOCKER=!CONFIG_INPUT:\=/!"
 
     :: .env 파일 생성
     echo # ComfyPack Configuration > "%ENV_FILE%"
@@ -86,25 +82,29 @@ if not exist "%ENV_FILE%" (
     echo COMFYUI_PORT=8188 >> "%ENV_FILE%"
     echo HOOKING_PORT=8189 >> "%ENV_FILE%"
 
-    echo.
     echo [OK] .env 파일이 생성되었습니다: %ENV_FILE%
 
     :: 필요한 폴더 생성
-    if not exist "!MODEL_INPUT!" mkdir "!MODEL_INPUT!"
-    if not exist "!PATCH_INPUT!" (
-        mkdir "!PATCH_INPUT!"
-        mkdir "!PATCH_INPUT!\asset"
-        mkdir "!PATCH_INPUT!\asset_data"
-        mkdir "!PATCH_INPUT!\chain_presets"
-        mkdir "!PATCH_INPUT!\customprompt"
-        mkdir "!PATCH_INPUT!\pose_data"
-        mkdir "!PATCH_INPUT!\auto_complete"
-        mkdir "!PATCH_INPUT!\workflow"
-        mkdir "!PATCH_INPUT!\mode_workflow"
-        echo [OK] 패치 데이터 폴더가 생성되었습니다: !PATCH_INPUT!
+    if not exist "%MODEL_DIR%" mkdir "%MODEL_DIR%"
+    if not exist "%PATCH_DIR%" (
+        mkdir "%PATCH_DIR%"
+        mkdir "%PATCH_DIR%\asset"
+        mkdir "%PATCH_DIR%\asset_data"
+        mkdir "%PATCH_DIR%\chain_presets"
+        mkdir "%PATCH_DIR%\customprompt"
+        mkdir "%PATCH_DIR%\pose_data"
+        mkdir "%PATCH_DIR%\auto_complete"
+        mkdir "%PATCH_DIR%\workflow"
+        mkdir "%PATCH_DIR%\mode_workflow"
+        echo [OK] 패치 데이터 폴더가 생성되었습니다.
     )
-    if not exist "!CONFIG_INPUT!\.." mkdir "!CONFIG_INPUT!\.."
     if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+    if not exist "%CONFIG_FILE%" (
+        echo {} > "%CONFIG_FILE%"
+        echo [OK] 빈 config.json 파일을 생성했습니다.
+    )
+
+    echo [OK] 초기 설정이 완료되었습니다.
 ) else (
     echo [OK] 기존 .env 파일을 사용합니다: %ENV_FILE%
 )
@@ -118,15 +118,17 @@ echo ═════════════════════════
 echo.
 echo   1. Docker 이미지 빌드 (로컬)
 echo   2. Docker Hub에서 이미지 다운로드 (권장)
-echo   3. ComfyPack 시작
-echo   4. ComfyPack 중지
-echo   5. 상태 확인
+echo   3. ComfyPack(컨테이너) 시작
+echo   4. ComfyPack(컨테이너) 중지
+echo   5. 실행 상태
 echo   6. 업데이트 (최신 버전으로)
 echo   7. 설정 초기화 (.env 재설정)
+echo   8. 컨테이너 삭제
+echo   9. 이미지 삭제 (디스크 공간 확보)
 echo   0. 종료
 echo.
 set "CHOICE="
-set /p "CHOICE=선택하세요 [0-7]: "
+set /p "CHOICE=선택하세요 [0-9]: "
 
 if "%CHOICE%"=="1" goto build
 if "%CHOICE%"=="2" goto pull
@@ -135,6 +137,8 @@ if "%CHOICE%"=="4" goto stop
 if "%CHOICE%"=="5" goto status
 if "%CHOICE%"=="6" goto update
 if "%CHOICE%"=="7" goto reset
+if "%CHOICE%"=="8" goto remove_containers
+if "%CHOICE%"=="9" goto remove_images
 if "%CHOICE%"=="0" exit /b 0
 goto menu
 
@@ -181,13 +185,13 @@ goto menu
 :: ─── 시작 ───────────────────────────────────────────────
 :start
 echo.
-echo ComfyPack을 시작합니다...
+echo ComfyPack(컨테이너)을 시작합니다...
 echo.
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
 if %errorlevel%==0 (
     echo.
     echo ══════════════════════════════════════════════════════
-    echo    ComfyPack이 시작되었습니다!
+    echo    ComfyPack(컨테이너)이 시작되었습니다!
     echo ══════════════════════════════════════════════════════
     echo.
     echo    ComfyUI:       http://localhost:8188
@@ -206,16 +210,16 @@ goto menu
 :: ─── 중지 ───────────────────────────────────────────────
 :stop
 echo.
-echo ComfyPack을 중지합니다...
+echo ComfyPack(컨테이너)을 중지합니다...
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" down
-echo [OK] ComfyPack이 중지되었습니다.
+echo [OK] ComfyPack(컨테이너)이 중지되었습니다.
 pause
 goto menu
 
 :: ─── 상태 확인 ──────────────────────────────────────────
 :status
 echo.
-echo ComfyPack 상태:
+echo ComfyPack(컨테이너) 상태:
 echo.
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" ps
 echo.
@@ -234,7 +238,7 @@ goto menu
 :update
 echo.
 echo ══════════════════════════════════════════════════════
-echo    ComfyPack 업데이트
+echo    ComfyPack(컨테이너) 업데이트
 echo ══════════════════════════════════════════════════════
 echo.
 
@@ -258,10 +262,44 @@ echo [3/4] 이전 이미지를 정리합니다...
 docker image prune -f
 
 echo.
-echo [4/4] ComfyPack을 재시작합니다...
+echo [4/4] ComfyPack(컨테이너)을 재시작합니다...
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
 
 echo.
 echo [OK] 업데이트가 완료되었습니다!
+pause
+goto menu
+
+:: ─── 컨테이너 삭제 ──────────────────────────────────────
+:remove_containers
+echo.
+echo ComfyPack(컨테이너)을 삭제합니다...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" down
+echo [OK] 컨테이너가 삭제되었습니다. 다시 시작하려면 메뉴 3을 선택하세요.
+pause
+goto menu
+
+:: ─── 이미지 삭제 ────────────────────────────────────────
+:remove_images
+echo.
+echo [!] ComfyPack Docker 이미지를 삭제합니다.
+echo     모델, 패치 데이터, 설정은 유지됩니다. 이미지만 삭제됩니다.
+echo.
+set "CONFIRM="
+set /p "CONFIRM=정말 삭제하시겠습니까? (y/N): "
+if /i not "%CONFIRM%"=="y" goto menu
+
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" down --rmi all
+if %errorlevel%==0 (
+    echo.
+    echo [OK] 이미지가 삭제되었습니다. 디스크 공간이 확보되었습니다.
+    echo     다시 사용하려면 메뉴 1 또는 2로 이미지를 받으세요.
+    echo.
+    echo 사용하지 않는 이미지를 추가 정리합니다...
+    docker image prune -f
+) else (
+    echo.
+    echo [X] 이미지 삭제에 실패했습니다.
+)
 pause
 goto menu

@@ -17,6 +17,17 @@ echo "===================================================="
 echo "   ComfyPack Linux Installer"
 echo "===================================================="
 echo ""
+echo "   New install: 2 -> 3"
+echo "   Update:      6"
+echo ""
+echo "   Other menus:"
+echo "     1 - Build images locally (slow, use when offline)"
+echo "     4 - Stop ComfyPack (containers)"
+echo "     5 - Check running status"
+echo "     7 - Reset settings (delete .env and regenerate)"
+echo ""
+echo "===================================================="
+echo ""
 
 ok()   { echo -e "  ${GREEN}[OK]${NC} $1"; }
 warn() { echo -e "  ${YELLOW}[!!]${NC} $1"; }
@@ -98,45 +109,36 @@ fi
 
 # ─── Configuration ───────────────────────────────────────
 ENV_FILE="$PROJECT_DIR/.env"
+CONFIG_DIR="$PROJECT_DIR/config"
+MODEL_DIR="$PROJECT_DIR/models"
+PATCH_DIR="$PROJECT_DIR/patch_data"
+CONFIG_FILE="$CONFIG_DIR/config.json"
 
 if [ ! -f "$ENV_FILE" ]; then
     echo ""
     echo "--- Initial Setup ---"
     echo ""
 
-    read -p "Enter model folder path [./models]: " MODEL_INPUT
-    MODEL_INPUT="${MODEL_INPUT:-./models}"
-    MODEL_INPUT="$(cd "$PROJECT_DIR" && realpath --canonicalize-missing "$MODEL_INPUT")"
-
-    read -p "Enter patch data folder path [./patch_data]: " PATCH_INPUT
-    PATCH_INPUT="${PATCH_INPUT:-./patch_data}"
-    PATCH_INPUT="$(cd "$PROJECT_DIR" && realpath --canonicalize-missing "$PATCH_INPUT")"
-
-    read -p "Enter config.json path [./config/config.json]: " CONFIG_INPUT
-    CONFIG_INPUT="${CONFIG_INPUT:-./config/config.json}"
-    CONFIG_INPUT="$(cd "$PROJECT_DIR" && realpath --canonicalize-missing "$CONFIG_INPUT")"
-
-    # Ensure config.json exists (Docker needs a file, not a directory)
-    if [ ! -f "$CONFIG_INPUT" ]; then
-        mkdir -p "$(dirname "$CONFIG_INPUT")"
-        echo '{}' > "$CONFIG_INPUT"
-        ok "Created empty config.json: $CONFIG_INPUT"
-    fi
-
     cat > "$ENV_FILE" << EOF
 # ComfyPack Configuration
-MODEL_PATH=$MODEL_INPUT
-PATCH_DATA_PATH=$PATCH_INPUT
-CONFIG_PATH=$CONFIG_INPUT
+MODEL_PATH=$MODEL_DIR
+PATCH_DATA_PATH=$PATCH_DIR
+CONFIG_PATH=$CONFIG_FILE
 COMFYUI_PORT=8188
 HOOKING_PORT=8189
 EOF
 
     ok ".env file created: $ENV_FILE"
 
-    mkdir -p "$MODEL_INPUT"
-    mkdir -p "$PATCH_INPUT"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow}
-    mkdir -p "$(dirname "$CONFIG_INPUT")"
+    mkdir -p "$MODEL_DIR"
+    mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow}
+    mkdir -p "$CONFIG_DIR"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo '{}' > "$CONFIG_FILE"
+        ok "Created empty config.json"
+    fi
+
+    ok "Initial setup complete."
 fi
 
 # ─── Menu ────────────────────────────────────────────────
@@ -148,14 +150,16 @@ while true; do
     echo ""
     echo "  1. Build Docker images (local)"
     echo "  2. Pull images from Docker Hub (recommended)"
-    echo "  3. Start ComfyPack"
-    echo "  4. Stop ComfyPack"
-    echo "  5. Check status"
+    echo "  3. Start ComfyPack (containers)"
+    echo "  4. Stop ComfyPack (containers)"
+    echo "  5. Running status"
     echo "  6. Update to latest version"
     echo "  7. Reset settings"
+    echo "  8. Remove containers"
+    echo "  9. Remove images (free disk space)"
     echo "  0. Exit"
     echo ""
-    read -p "Select [0-7]: " CHOICE
+    read -p "Select [0-9]: " CHOICE
 
     case "$CHOICE" in
         1)
@@ -173,11 +177,11 @@ while true; do
             ok "Download complete!"
             ;;
         3)
-            echo "Starting ComfyPack..."
+            echo "Starting ComfyPack (containers)..."
             docker compose -f "$PROJECT_DIR/docker-compose.yml" up -d
             echo ""
             echo "===================================================="
-            echo "   ComfyPack is running!"
+            echo "   ComfyPack (containers) is running!"
             echo "===================================================="
             echo ""
             echo "   ComfyUI:        http://localhost:8188"
@@ -185,7 +189,7 @@ while true; do
             echo ""
             ;;
         4)
-            echo "Stopping ComfyPack..."
+            echo "Stopping ComfyPack (containers)..."
             docker compose -f "$PROJECT_DIR/docker-compose.yml" down
             ok "Stopped."
             ;;
@@ -194,7 +198,7 @@ while true; do
             ;;
         6)
             echo "===================================================="
-            echo "   ComfyPack Update"
+            echo "   ComfyPack (containers) Update"
             echo "===================================================="
             echo ""
             echo "[1/4] Downloading latest code..."
@@ -209,13 +213,34 @@ while true; do
             echo "[3/4] Cleaning up old images..."
             docker image prune -f
             echo ""
-            echo "[4/4] Restarting ComfyPack..."
+            echo "[4/4] Restarting ComfyPack (containers)..."
             docker compose -f "$PROJECT_DIR/docker-compose.yml" up -d
             ok "Update complete!"
             ;;
         7)
             rm -f "$ENV_FILE"
             ok ".env deleted. Run again to reconfigure."
+            ;;
+        8)
+            echo "Removing ComfyPack (containers)..."
+            docker compose -f "$PROJECT_DIR/docker-compose.yml" down
+            ok "Containers removed. Select menu 3 to start again."
+            ;;
+        9)
+            echo ""
+            echo "[!] This will remove ComfyPack Docker images."
+            echo "    Models, patch data, and config will be kept. Only images are removed."
+            echo ""
+            read -p "Are you sure? (y/N): " CONFIRM
+            if [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "Y" ]; then
+                docker compose -f "$PROJECT_DIR/docker-compose.yml" down --rmi all
+                echo ""
+                ok "Images removed. Disk space freed."
+                echo "  Use menu 1 or 2 to download images again."
+                echo ""
+                echo "Cleaning up remaining unused images..."
+                docker image prune -f
+            fi
             ;;
         0)
             exit 0
