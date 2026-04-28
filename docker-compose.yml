@@ -10,11 +10,12 @@ services:
     ports:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
-      - ${MODEL_PATH:-./models}:/models
+      - ${MODEL_PATH:-./comfyui/models}:/models
       - ${INPUT_PATH:-./input}:/app/comfyui/input
       - ${OUTPUT_PATH:-./output}:/app/comfyui/output
       - ${SNAPSHOT_PATH:-./snapshots}:/app/comfyui/custom_nodes/ComfyUI-Manager/snapshots
       - ${USER_NODES_PATH:-./user_nodes}:/app/user_nodes
+      - ${WORKFLOW_PATH:-./comfyui/workflows}:/app/comfyui/user/default/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     deploy:
@@ -39,20 +40,20 @@ services:
     ports:
       - "${HOOKING_PORT:-8189}:8189"
     volumes:
-      - ${PATCH_DATA_PATH:-./patch_data}/asset:/app/asset
-      - ${PATCH_DATA_PATH:-./patch_data}/asset_data:/app/asset_data
-      - ${PATCH_DATA_PATH:-./patch_data}/chain_presets:/app/chain_presets
-      - ${PATCH_DATA_PATH:-./patch_data}/customprompt:/app/customprompt
-      - ${PATCH_DATA_PATH:-./patch_data}/pose_data:/app/pose_data
-      - ${PATCH_DATA_PATH:-./patch_data}/auto_complete:/app/auto_complete
-      - ${PATCH_DATA_PATH:-./patch_data}/workflow:/app/workflow
-      - ${PATCH_DATA_PATH:-./patch_data}/mode_workflow:/app/mode_workflow
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset:/app/asset
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset_data:/app/asset_data
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/chain_presets:/app/chain_presets
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/customprompt:/app/customprompt
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/pose_data:/app/pose_data
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/auto_complete:/app/auto_complete
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/workflow:/app/workflow
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/mode_workflow:/app/mode_workflow
       - ${CONFIG_PATH:-./config/config.json}:/app/config.json
       - hooking_logs:/app/logs
-      - hooking_backup:/app/workflow_backup
-      - hooking_backup_static:/app/workflow_backup_static
-      - hooking_current:/app/current_work
-      - hooking_current_mode:/app/current_mode_workflow
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/workflow_backup:/app/workflow_backup
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/workflow_backup_static:/app/workflow_backup_static
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/current_work:/app/current_work
+      - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/current_mode_workflow:/app/current_mode_workflow
     environment:
       - REAL_COMFY_HOST=comfyui
       - REAL_COMFY_PORT=8188
@@ -65,7 +66,3 @@ services:
 
 volumes:
   hooking_logs:
-  hooking_backup:
-  hooking_backup_static:
-  hooking_current:
-  hooking_current_mode:

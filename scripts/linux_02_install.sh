@@ -110,8 +110,8 @@ fi
 # ─── Configuration ───────────────────────────────────────
 ENV_FILE="$PROJECT_DIR/.env"
 CONFIG_DIR="$PROJECT_DIR/config"
-MODEL_DIR="$PROJECT_DIR/models"
-PATCH_DIR="$PROJECT_DIR/patch_data"
+MODEL_DIR="$PROJECT_DIR/comfyui/models"
+PATCH_DIR="$PROJECT_DIR/hooking_server/patch_data"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -131,7 +131,7 @@ EOF
     ok ".env file created: $ENV_FILE"
 
     mkdir -p "$MODEL_DIR"
-    mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow}
+    mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow,workflow_backup,workflow_backup_static,current_work,current_mode_workflow}
     mkdir -p "$CONFIG_DIR"
     if [ ! -f "$CONFIG_FILE" ]; then
         echo '{}' > "$CONFIG_FILE"

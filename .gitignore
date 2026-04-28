@@ -13,29 +13,37 @@ claude.md
 요구사항/
 
 # Models (large files, downloaded separately)
-models/bbox/*
-models/checkpoints/*
-models/clip/*
-models/clip_vision/*
-models/controlnet/*
-models/ipadapter/*
-models/loras/*
-models/taggers/*
-models/unet/*
-models/upscale_models/*
-models/vae/*
-!models/**/.gitkeep
+comfyui/models/bbox/*
+comfyui/models/checkpoints/*
+comfyui/models/clip/*
+comfyui/models/clip_vision/*
+comfyui/models/controlnet/*
+comfyui/models/ipadapter/*
+comfyui/models/loras/*
+comfyui/models/taggers/*
+comfyui/models/unet/*
+comfyui/models/upscale_models/*
+comfyui/models/vae/*
+!comfyui/models/**/.gitkeep
 
 # Patch data (community-only, distributed separately)
-patch_data/asset/*
-patch_data/asset_data/*
-patch_data/auto_complete/*
-patch_data/chain_presets/*
-patch_data/customprompt/*
-patch_data/mode_workflow/*
-patch_data/pose_data/*
-patch_data/workflow/*
-!patch_data/**/.gitkeep
+hooking_server/patch_data/asset/*
+hooking_server/patch_data/asset_data/*
+hooking_server/patch_data/auto_complete/*
+hooking_server/patch_data/chain_presets/*
+hooking_server/patch_data/customprompt/*
+hooking_server/patch_data/mode_workflow/*
+hooking_server/patch_data/pose_data/*
+hooking_server/patch_data/workflow/*
+hooking_server/patch_data/workflow_backup/*
+hooking_server/patch_data/workflow_backup_static/*
+hooking_server/patch_data/current_work/*
+hooking_server/patch_data/current_mode_workflow/*
+!hooking_server/patch_data/**/.gitkeep
+
+# ComfyUI workflows (user data)
+comfyui/workflows/*
+!comfyui/workflows/.gitkeep
 
 # OS files
 Thumbs.db

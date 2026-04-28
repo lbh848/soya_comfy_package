@@ -5,8 +5,8 @@
 set -e
 
 PROJECT_DIR="${RUNPOD_PROJECT_DIR:-/workspace/comfypack}"
-MODEL_DIR="${RUNPOD_MODEL_DIR:-/workspace/models}"
-PATCH_DIR="${RUNPOD_PATCH_DIR:-/workspace/patch_data}"
+MODEL_DIR="${RUNPOD_MODEL_DIR:-/workspace/comfyui/models}"
+PATCH_DIR="${RUNPOD_PATCH_DIR:-/workspace/hooking_server/patch_data}"
 CONFIG_DIR="${RUNPOD_CONFIG_DIR:-/workspace/config}"
 
 echo "===================================================="
@@ -24,7 +24,7 @@ EOF
 
 # ─── Ensure directories exist ───────────────────────────
 mkdir -p "$MODEL_DIR"
-mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow}
+mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow,workflow_backup,workflow_backup_static,current_work,current_mode_workflow}
 mkdir -p "$CONFIG_DIR"
 if [ ! -f "$CONFIG_DIR/config.json" ]; then
     echo '{}' > "$CONFIG_DIR/config.json"

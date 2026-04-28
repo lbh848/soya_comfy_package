@@ -65,8 +65,8 @@ set "ENV_FILE=%PROJECT_DIR%\.env"
 set "CONFIG_DIR=%PROJECT_DIR%\config"
 
 :: Fixed paths (inside package)
-set "MODEL_DIR=%PROJECT_DIR%\models"
-set "PATCH_DIR=%PROJECT_DIR%\patch_data"
+set "MODEL_DIR=%PROJECT_DIR%\comfyui\models"
+set "PATCH_DIR=%PROJECT_DIR%\hooking_server\patch_data"
 set "CONFIG_FILE=%CONFIG_DIR%\config.json"
 
 :: Convert backslashes to forward slashes (for Docker Compose)
@@ -105,6 +105,10 @@ if not exist "%PATCH_DIR%" (
     mkdir "%PATCH_DIR%\auto_complete"
     mkdir "%PATCH_DIR%\workflow"
     mkdir "%PATCH_DIR%\mode_workflow"
+    mkdir "%PATCH_DIR%\workflow_backup"
+    mkdir "%PATCH_DIR%\workflow_backup_static"
+    mkdir "%PATCH_DIR%\current_work"
+    mkdir "%PATCH_DIR%\current_mode_workflow"
     echo [OK] Patch data folders created.
 )
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
