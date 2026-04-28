@@ -1,4 +1,10 @@
 @echo off
+REM 창 자동 종료 방지 - 에러 발생 시 창이 유지됩니다
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - 시스템 사양 확인
 setlocal enabledelayedexpansion
@@ -173,4 +179,4 @@ if !FAIL! GTR 0 (
 
 echo.
 pause
-exit /b 0
+exit

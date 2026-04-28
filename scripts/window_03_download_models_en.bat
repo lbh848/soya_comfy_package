@@ -1,4 +1,10 @@
 @echo off
+:: Prevent window from closing on error
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - Auto Model Downloader
 setlocal enabledelayedexpansion
@@ -21,7 +27,7 @@ if %errorlevel% neq 0 (
     echo     It is included by default on Windows 10 and later.
     echo     Please update Windows and try again.
     pause
-    exit /b 1
+    exit
 )
 echo [OK] curl is available
 
@@ -34,7 +40,7 @@ set "MODELS_DIR=%cd%\models"
 echo [OK] Models folder: %MODELS_DIR%
 
 :: ─── 3. Create subdirectories ───────────────────────────
-for %%d in (unet vae clip clip_vision ipadapter controlnet upscale_models bbox) do (
+for %%d in (checkpoints loras unet vae clip clip_vision ipadapter controlnet upscale_models bbox) do (
     if not exist "%MODELS_DIR%\%%d" mkdir "%MODELS_DIR%\%%d"
 )
 echo [OK] Folder structure ready
@@ -46,7 +52,7 @@ echo.
 echo  [Core Image Generation]
 echo   1. anima-preview2.safetensors         - Core Anima image generation model
 echo   2. qwen_image_vae.safetensors         - Image encoding/decoding
-echo   3. qwen_3_06b_base.safetensors        - Text understanding AI (prompt analysis)
+echo   3. qwen text encoder 3.06B            - Text understanding AI - prompt analysis
 echo   4. ViT-L14.safetensors                - Image feature extraction
 echo   5. CLIP-ViT-bigG-14-... (~3.5GB)      - IPAdapter vision model
 echo.
@@ -73,7 +79,7 @@ if /i not "%CONFIRM%"=="Y" (
     echo.
     echo Download cancelled.
     pause
-    exit /b 0
+    exit
 )
 
 echo.
@@ -294,8 +300,16 @@ if exist "%FILE%" (
         curl -L -# -C - -o "%FILE%" "https://civitai.com/api/download/models/!VERSION_ID!?type=Model&format=SafeTensor"
         if !errorlevel! equ 0 (
             if exist "%FILE%" (
-                echo         Done!
-                set /a SUCCESS+=1
+                set "FSize=0"
+                for %%s in ("!FILE!") do set "FSize=%%~zs"
+                if !FSize! LSS 1048576 (
+                    echo         Failed - file corrupted (re-run to retry)
+                    del "!FILE!" 2>nul
+                    set /a FAILED+=1
+                ) else (
+                    echo         Done!
+                    set /a SUCCESS+=1
+                )
             ) else (
                 echo         Failed - file was not created.
                 set /a FAILED+=1

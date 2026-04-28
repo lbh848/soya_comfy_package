@@ -1,6 +1,6 @@
 #!/bin/bash
 # ComfyPack - Required Models Auto-Downloader (Linux)
-# Downloads 11 model files needed for ComfyPack
+# Downloads 13 model files needed for ComfyPack
 
 set +e  # Don't exit on error - continue downloading remaining files
 
@@ -44,7 +44,7 @@ fi
 echo -e "${GREEN}[OK]${NC} Models folder: $MODELS_DIR"
 
 # ─── 4. Create subdirectories ───────────────────────────
-for dir in unet vae clip clip_vision ipadapter controlnet upscale_models bbox; do
+for dir in checkpoints loras unet vae clip clip_vision ipadapter controlnet upscale_models bbox; do
     mkdir -p "$MODELS_DIR/$dir"
 done
 echo -e "${GREEN}[OK]${NC} Folder structure ready"

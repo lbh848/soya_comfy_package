@@ -1,4 +1,10 @@
 @echo off
+:: Prevent window from closing on error
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - Installer
 setlocal enabledelayedexpansion
@@ -31,7 +37,7 @@ if %errorlevel% neq 0 (
     echo.
     echo After installation, start Docker Desktop and run this script again.
     pause
-    exit /b 1
+    exit
 )
 
 docker info >nul 2>&1
@@ -39,7 +45,7 @@ if %errorlevel% neq 0 (
     echo [X] Docker is not running.
     echo Please start Docker Desktop and try again.
     pause
-    exit /b 1
+    exit
 )
 
 echo [OK] Docker is running.
@@ -116,7 +122,7 @@ set "WSLCONFIG_DST=%USERPROFILE%\.wslconfig"
 if exist "%WSLCONFIG_SRC%" (
     if not exist "%WSLCONFIG_DST%" (
         copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
-        echo [OK] WSL2 memory limit applied (16GB). Takes effect on Docker restart.
+        echo [OK] WSL2 memory limit applied - 16GB. Takes effect on Docker restart.
     ) else (
         fc "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul 2>&1
         if !errorlevel! neq 0 (
@@ -156,7 +162,7 @@ if "%CHOICE%"=="6" goto update
 if "%CHOICE%"=="7" goto reset
 if "%CHOICE%"=="8" goto remove_containers
 if "%CHOICE%"=="9" goto remove_images
-if "%CHOICE%"=="0" exit /b 0
+if "%CHOICE%"=="0" goto quit
 goto menu
 
 :build
@@ -321,8 +327,7 @@ if %errorlevel%==0 (
 pause
 goto menu
 
-:: ─── Unexpected exit catch ──────────────────────────────
+:quit
 echo.
-echo [!] Script exited unexpectedly. Check errors above.
 pause
-exit /b 1
+exit

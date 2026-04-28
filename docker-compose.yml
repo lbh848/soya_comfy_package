@@ -11,6 +11,10 @@ services:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
       - ${MODEL_PATH:-./models}:/models
+      - ${INPUT_PATH:-./input}:/app/comfyui/input
+      - ${OUTPUT_PATH:-./output}:/app/comfyui/output
+      - ${SNAPSHOT_PATH:-./snapshots}:/app/comfyui/custom_nodes/ComfyUI-Manager/snapshots
+      - ${USER_NODES_PATH:-./user_nodes}:/app/user_nodes
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     deploy:
@@ -43,7 +47,7 @@ services:
       - ${PATCH_DATA_PATH:-./patch_data}/auto_complete:/app/auto_complete
       - ${PATCH_DATA_PATH:-./patch_data}/workflow:/app/workflow
       - ${PATCH_DATA_PATH:-./patch_data}/mode_workflow:/app/mode_workflow
-      - ${CONFIG_PATH:-./config}:/app/config.json
+      - ${CONFIG_PATH:-./config/config.json}:/app/config.json
       - hooking_logs:/app/logs
       - hooking_backup:/app/workflow_backup
       - hooking_backup_static:/app/workflow_backup_static

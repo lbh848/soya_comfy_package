@@ -26,6 +26,10 @@ EOF
 mkdir -p "$MODEL_DIR"
 mkdir -p "$PATCH_DIR"/{asset,asset_data,chain_presets,customprompt,pose_data,auto_complete,workflow,mode_workflow}
 mkdir -p "$CONFIG_DIR"
+if [ ! -f "$CONFIG_DIR/config.json" ]; then
+    echo '{}' > "$CONFIG_DIR/config.json"
+    echo "[OK] Created empty config.json"
+fi
 
 # ─── Start services ─────────────────────────────────────
 cd "$PROJECT_DIR"

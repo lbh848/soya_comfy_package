@@ -1,4 +1,10 @@
 @echo off
+REM 창 자동 종료 방지 - 에러 발생 시 창이 유지됩니다
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - 설치 프로그램
 setlocal enabledelayedexpansion
@@ -31,7 +37,7 @@ if %errorlevel% neq 0 (
     echo.
     echo 설치 후 Docker Desktop을 실행하고 이 스크립트를 다시 실행하세요.
     pause
-    exit /b 1
+    exit
 )
 
 docker info >nul 2>&1
@@ -39,7 +45,7 @@ if %errorlevel% neq 0 (
     echo [X] Docker가 실행 중이 아닙니다.
     echo Docker Desktop을 실행한 후 다시 시도하세요.
     pause
-    exit /b 1
+    exit
 )
 
 echo [OK] Docker가 정상적으로 실행 중입니다.
@@ -116,7 +122,7 @@ set "WSLCONFIG_DST=%USERPROFILE%\.wslconfig"
 if exist "%WSLCONFIG_SRC%" (
     if not exist "%WSLCONFIG_DST%" (
         copy /y "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul
-        echo [OK] WSL2 메모리 설정 적용 (16GB). Docker 재시작 시 반영됩니다.
+        echo [OK] WSL2 메모리 설정 적용 - 16GB. Docker 재시작 시 반영됩니다.
     ) else (
         fc "%WSLCONFIG_SRC%" "%WSLCONFIG_DST%" >nul 2>&1
         if !errorlevel! neq 0 (
@@ -156,7 +162,7 @@ if "%CHOICE%"=="6" goto update
 if "%CHOICE%"=="7" goto reset
 if "%CHOICE%"=="8" goto remove_containers
 if "%CHOICE%"=="9" goto remove_images
-if "%CHOICE%"=="0" exit /b 0
+if "%CHOICE%"=="0" goto quit
 goto menu
 
 :: ─── 빌드 ───────────────────────────────────────────────
@@ -327,8 +333,7 @@ if %errorlevel%==0 (
 pause
 goto menu
 
-:: ─── 예기치 않은 종료 방지 ────────────────────────────────
+:quit
 echo.
-echo [!] 스크립트가 예상치 못하게 종료되었습니다. 위 오류를 확인하세요.
 pause
-exit /b 1
+exit

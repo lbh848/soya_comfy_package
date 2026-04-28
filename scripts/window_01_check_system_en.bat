@@ -1,4 +1,10 @@
 @echo off
+:: Prevent window from closing on error
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - System Requirements Check
 setlocal enabledelayedexpansion
@@ -173,4 +179,4 @@ if !FAIL! GTR 0 (
 
 echo.
 pause
-exit /b 0
+exit

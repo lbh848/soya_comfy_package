@@ -1,4 +1,10 @@
 @echo off
+REM 창 자동 종료 방지 - 에러 발생 시 창이 유지됩니다
+if "%~1"=="_RUN_" goto main
+start "ComfyPack" cmd /k "%~f0" _RUN_
+goto :EOF
+
+:main
 chcp 65001 >nul 2>&1
 title ComfyPack - 필수 모델 자동 다운로드
 setlocal enabledelayedexpansion
@@ -21,7 +27,7 @@ if %errorlevel% neq 0 (
     echo     Windows 10 이상에서는 기본 제공됩니다.
     echo     Windows 업데이트 후 다시 시도하세요.
     pause
-    exit /b 1
+    exit
 )
 echo [OK] curl 사용 가능
 
@@ -34,7 +40,7 @@ set "MODELS_DIR=%cd%\models"
 echo [OK] 모델 폴더: %MODELS_DIR%
 
 :: ─── 3. 하위 폴더 생성 ──────────────────────────────────
-for %%d in (unet vae clip clip_vision ipadapter controlnet upscale_models bbox) do (
+for %%d in (checkpoints loras unet vae clip clip_vision ipadapter controlnet upscale_models bbox) do (
     if not exist "%MODELS_DIR%\%%d" mkdir "%MODELS_DIR%\%%d"
 )
 echo [OK] 폴더 구조 준비 완료
@@ -46,7 +52,7 @@ echo.
 echo  [이미지 생성 핵심]
 echo   1. anima-preview2.safetensors         - Anima 이미지 생성 핵심 모델
 echo   2. qwen_image_vae.safetensors         - 이미지 인코딩/디코딩
-echo   3. qwen_3_06b_base.safetensors        - 텍스트 이해 AI (프롬프트 해석)
+echo   3. qwen text encoder 3.06B            - Text understanding AI
 echo   4. ViT-L14.safetensors                - 이미지 특징 추출
 echo   5. CLIP-ViT-bigG-14-... (~3.5GB)      - IPAdapter용 비전 모델
 echo.
@@ -73,7 +79,7 @@ if /i not "%CONFIRM%"=="Y" (
     echo.
     echo 다운로드를 취소합니다.
     pause
-    exit /b 0
+    exit
 )
 
 echo.
@@ -294,8 +300,16 @@ if exist "%FILE%" (
         curl -L -# -C - -o "%FILE%" "https://civitai.com/api/download/models/!VERSION_ID!?type=Model&format=SafeTensor"
         if !errorlevel! equ 0 (
             if exist "%FILE%" (
-                echo         완료!
-                set /a SUCCESS+=1
+                set "FSize=0"
+                for %%s in ("!FILE!") do set "FSize=%%~zs"
+                if !FSize! LSS 1048576 (
+                    echo         실패 - 파일 손상 (다시 실행하면 재다운로드됩니다)
+                    del "!FILE!" 2>nul
+                    set /a FAILED+=1
+                ) else (
+                    echo         완료!
+                    set /a SUCCESS+=1
+                )
             ) else (
                 echo         실패 - 파일이 생성되지 않았습니다.
                 set /a FAILED+=1
