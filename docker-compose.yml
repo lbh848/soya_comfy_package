@@ -10,7 +10,7 @@ services:
     ports:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
-      - ${MODEL_PATH:-./comfyui/models}:/models
+      - ${MODEL_PATH:-comfyui_models}:/app/comfyui/models
       - ${INPUT_PATH:-./comfyui/input}:/app/comfyui/input
       - ${OUTPUT_PATH:-./comfyui/output}:/app/comfyui/output
       - ${SNAPSHOT_PATH:-./comfyui/snapshots}:/app/comfyui/user/__manager/snapshots
@@ -66,4 +66,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  comfyui_models:
   hooking_logs:

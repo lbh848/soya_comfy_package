@@ -68,13 +68,8 @@ RUN git clone https://github.com/comfyanonymous/ComfyUI.git comfyui \
 
 WORKDIR /app/comfyui
 
-# ─── ComfyUI-Manager ────────────────────────────────────
-RUN cd custom_nodes \
-    && git clone https://github.com/ltdrdata/ComfyUI-Manager.git \
-    && cd ComfyUI-Manager \
-    && pip install --no-cache-dir -r requirements.txt
-
-# ─── Custom Nodes (Manager-installed) ────────────────────
+# ─── Custom Nodes (builtin - baked into image) ───────────
+# Manager and LoRA Manager are installed as user_nodes for settings persistence
 # Each node's pip install has || true so a missing requirements.txt doesn't skip remaining nodes
 RUN cd custom_nodes \
     && git clone https://github.com/kijai/ComfyUI-KJNodes.git \
@@ -91,8 +86,6 @@ RUN cd custom_nodes \
     && cd rgthree-comfy && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/yolain/ComfyUI-Easy-Use.git \
     && cd ComfyUI-Easy-Use && pip install --no-cache-dir -r requirements.txt || true && cd .. \
-    && git clone https://github.com/willmiao/ComfyUI-Lora-Manager.git \
-    && cd ComfyUI-Lora-Manager && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/neverbiasu/ComfyUI-SAM2.git \
     && cd ComfyUI-SAM2 && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/regiellis/ComfyUI-EasyColorCorrector.git \
@@ -102,16 +95,20 @@ RUN cd custom_nodes \
     && git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git \
     && cd ComfyUI-Custom-Scripts && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/WASasquatch/was-node-suite-comfyui.git \
-    && cd was-node-suite-comfyui && pip install --no-cache-dir -r requirements.txt || true && cd ..
+    && cd was-node-suite-comfyui && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/sipherxyz/comfyui-art-venture.git \
+    && cd comfyui-art-venture && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/EllangoK/ComfyUI-post-processing-nodes.git \
+    && cd ComfyUI-post-processing-nodes && pip install --no-cache-dir -r requirements.txt || true && cd ..
 
-# ─── Extra model paths (mount point) ─────────────────────
-COPY extra_model_paths.yaml /app/comfyui/extra_model_paths.yaml
+# ─── Extra model paths not needed - models mounted at /app/comfyui/models ─
 
 # ─── Save builtin node list for entrypoint ───────────────
 RUN cd custom_nodes && ls -1d */ | sed 's/\/$//' > /app/builtin_nodes.txt
 
 # ─── Entrypoint: symlink user_nodes + restore deps ───────
 COPY restore_nodes.py /app/restore_nodes.py
+COPY init_lora_manager.py /app/init_lora_manager.py
 COPY entrypoint.sh /app/comfyui/entrypoint.sh
 RUN chmod +x /app/comfyui/entrypoint.sh
 

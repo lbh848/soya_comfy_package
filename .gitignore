@@ -13,19 +13,8 @@ claude.md
 # Project docs (private)
 요구사항/
 
-# Models (large files, downloaded separately)
-comfyui/models/bbox/*
-comfyui/models/checkpoints/*
-comfyui/models/clip/*
-comfyui/models/clip_vision/*
-comfyui/models/controlnet/*
-comfyui/models/ipadapter/*
-comfyui/models/loras/*
-comfyui/models/taggers/*
-comfyui/models/unet/*
-comfyui/models/upscale_models/*
-comfyui/models/vae/*
-!comfyui/models/**/.gitkeep
+# Models (stored in Docker named volume, not in repo)
+comfyui/models/*
 
 # Patch data (community-only, distributed separately)
 hooking_server/patch_data/asset/*
