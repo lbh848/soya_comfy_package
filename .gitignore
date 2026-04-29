@@ -1,5 +1,6 @@
 # Environment
 .env
+.civitai_api_key
 
 # User config (use config.example.json as template)
 config/config.json
