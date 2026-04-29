@@ -1,2 +1,6 @@
 models/
 workflows/
+input/
+output/
+snapshots/
+user_nodes/

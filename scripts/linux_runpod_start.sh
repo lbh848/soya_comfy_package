@@ -37,7 +37,7 @@ if [ ! -f "$CONFIG_DIR/config.json" ]; then
 fi
 
 # ─── Clone repos if missing ─────────────────────────────
-USER_NODES_DIR="$PROJECT_DIR/user_nodes"
+USER_NODES_DIR="$PROJECT_DIR/comfyui/user_nodes"
 HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
 
 mkdir -p "$USER_NODES_DIR"

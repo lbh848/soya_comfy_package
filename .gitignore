@@ -45,6 +45,29 @@ hooking_server/patch_data/current_mode_workflow/*
 comfyui/workflows/*
 !comfyui/workflows/.gitkeep
 
+# ComfyUI user data
+comfyui/input/*
+!comfyui/input/.gitkeep
+comfyui/output/*
+!comfyui/output/.gitkeep
+comfyui/snapshots/*
+!comfyui/snapshots/.gitkeep
+comfyui/user_nodes/*
+!comfyui/user_nodes/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Old root-level dirs (migrated to comfyui/)
+/input/
+/output/
+/snapshots/
+/user_nodes/
+
+# Hooking server source (git clone, bind mount)
+hooking_server/app/
+
 # OS files
 Thumbs.db
 .DS_Store

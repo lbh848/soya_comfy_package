@@ -92,7 +92,17 @@ RUN cd custom_nodes \
     && git clone https://github.com/yolain/ComfyUI-Easy-Use.git \
     && cd ComfyUI-Easy-Use && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/willmiao/ComfyUI-Lora-Manager.git \
-    && cd ComfyUI-Lora-Manager && pip install --no-cache-dir -r requirements.txt || true && cd ..
+    && cd ComfyUI-Lora-Manager && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/neverbiasu/ComfyUI-SAM2.git \
+    && cd ComfyUI-SAM2 && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/regiellis/ComfyUI-EasyColorCorrector.git \
+    && cd ComfyUI-EasyColorCorrector && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/pythongosssss/ComfyUI-WD14-Tagger.git \
+    && cd ComfyUI-WD14-Tagger && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git \
+    && cd ComfyUI-Custom-Scripts && pip install --no-cache-dir -r requirements.txt || true && cd .. \
+    && git clone https://github.com/WASasquatch/was-node-suite-comfyui.git \
+    && cd was-node-suite-comfyui && pip install --no-cache-dir -r requirements.txt || true && cd ..
 
 # ─── Extra model paths (mount point) ─────────────────────
 COPY extra_model_paths.yaml /app/comfyui/extra_model_paths.yaml

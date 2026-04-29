@@ -147,7 +147,7 @@ EOF
 fi
 
 # ─── Clone repos if missing ──────────────────────────────
-USER_NODES_DIR="$PROJECT_DIR/user_nodes"
+USER_NODES_DIR="$PROJECT_DIR/comfyui/user_nodes"
 HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
 
 mkdir -p "$USER_NODES_DIR"
@@ -273,7 +273,7 @@ while true; do
 
             echo ""
             echo "[4/6] Updating custom nodes..."
-            USER_NODES_DIR="$PROJECT_DIR/user_nodes"
+            USER_NODES_DIR="$PROJECT_DIR/comfyui/user_nodes"
             HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
 
             echo ""

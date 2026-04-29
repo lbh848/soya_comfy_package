@@ -11,10 +11,10 @@ services:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
       - ${MODEL_PATH:-./comfyui/models}:/models
-      - ${INPUT_PATH:-./input}:/app/comfyui/input
-      - ${OUTPUT_PATH:-./output}:/app/comfyui/output
-      - ${SNAPSHOT_PATH:-./snapshots}:/app/comfyui/user/__manager/snapshots
-      - ${USER_NODES_PATH:-./user_nodes}:/app/user_nodes
+      - ${INPUT_PATH:-./comfyui/input}:/app/comfyui/input
+      - ${OUTPUT_PATH:-./comfyui/output}:/app/comfyui/output
+      - ${SNAPSHOT_PATH:-./comfyui/snapshots}:/app/comfyui/user/__manager/snapshots
+      - ${USER_NODES_PATH:-./comfyui/user_nodes}:/app/user_nodes
       - ${WORKFLOW_PATH:-./comfyui/workflows}:/app/comfyui/user/default/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
