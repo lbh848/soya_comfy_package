@@ -6,14 +6,14 @@ services:
     build:
       context: ./comfyui
       dockerfile: Dockerfile
-    image: soya/comfypack-comfyui:latest
+    image: soyaslave/comfypack-comfyui:latest
     ports:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
       - ${MODEL_PATH:-./comfyui/models}:/models
       - ${INPUT_PATH:-./input}:/app/comfyui/input
       - ${OUTPUT_PATH:-./output}:/app/comfyui/output
-      - ${SNAPSHOT_PATH:-./snapshots}:/app/comfyui/custom_nodes/ComfyUI-Manager/snapshots
+      - ${SNAPSHOT_PATH:-./snapshots}:/app/comfyui/user/__manager/snapshots
       - ${USER_NODES_PATH:-./user_nodes}:/app/user_nodes
       - ${WORKFLOW_PATH:-./comfyui/workflows}:/app/comfyui/user/default/workflows
     environment:
@@ -36,10 +36,11 @@ services:
     build:
       context: ./hooking_server
       dockerfile: Dockerfile
-    image: soya/comfypack-hooking:latest
+    image: soyaslave/comfypack-hooking:latest
     ports:
       - "${HOOKING_PORT:-8189}:8189"
     volumes:
+      - ${HOOKING_SERVER_SRC:-./hooking_server/app}:/app
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset:/app/asset
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset_data:/app/asset_data
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/chain_presets:/app/chain_presets

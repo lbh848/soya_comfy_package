@@ -21,7 +21,7 @@ set "PASS=0"
 set "WARN=0"
 set "FAIL=0"
 
-REM ─── 1. WSL2 (required for Docker Desktop) ──────────
+REM --- 1. WSL2 (required for Docker Desktop) ----------
 echo [1/6] Checking WSL2 - Windows virtualization...
 where wsl >nul 2>&1
 if %errorlevel%==0 (
@@ -35,7 +35,7 @@ if %errorlevel%==0 (
     set /a "FAIL+=1"
 )
 
-REM ─── 2. NVIDIA GPU ──────────────────────────────────────
+REM --- 2. NVIDIA GPU --------------------------------------
 echo.
 echo [2/6] Checking NVIDIA GPU...
 where nvidia-smi >nul 2>&1
@@ -74,7 +74,7 @@ if %errorlevel%==0 (
     set /a "FAIL+=1"
 )
 
-REM ─── 3. RAM ─────────────────────────────────────────────
+REM --- 3. RAM ---------------------------------------------
 echo.
 echo [3/6] Checking memory - RAM...
 set "RAM_GB="
@@ -95,7 +95,7 @@ if defined RAM_GB (
     set /a "WARN+=1"
 )
 
-REM ─── 4. Docker Desktop ──────────────────────────────────
+REM --- 4. Docker Desktop ----------------------------------
 echo.
 echo [4/6] Checking Docker Desktop...
 where docker >nul 2>&1
@@ -116,7 +116,7 @@ if %errorlevel%==0 (
     set /a "FAIL+=1"
 )
 
-REM ─── 5. NVIDIA Container Toolkit ────────────────────────
+REM --- 5. NVIDIA Container Toolkit ------------------------
 echo.
 echo [5/6] Checking NVIDIA Container Toolkit...
 set "DOCKER_RUNNING=0"
@@ -140,7 +140,7 @@ if "!DOCKER_RUNNING!"=="1" (
     set /a "WARN+=1"
 )
 
-REM ─── 6. Disk Space ──────────────────────────────────────
+REM --- 6. Disk Space --------------------------------------
 echo.
 echo [6/6] Checking disk space...
 set "DISK_GB="
@@ -161,7 +161,7 @@ if defined DISK_GB (
     set /a "WARN+=1"
 )
 
-REM ─── Summary ────────────────────────────────────────────
+REM --- Summary --------------------------------------------
 echo.
 echo ====================================================
 echo    Check Complete
@@ -179,4 +179,4 @@ if !FAIL! GTR 0 (
 
 echo.
 pause
-exit
+exit /b

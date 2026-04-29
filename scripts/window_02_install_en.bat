@@ -9,25 +9,24 @@ chcp 65001 >nul 2>&1
 title ComfyPack - Installer
 setlocal enabledelayedexpansion
 
+:: --- Branch Configuration (change these for deployment) ---
+set "SOYA_NODES_BRANCH=main"
+set "WF_CONVERTER_BRANCH=main"
+set "HOOKING_SERVER_BRANCH=main"
+
 echo.
 echo ====================================================
 echo    ComfyPack Installer
 echo    ComfyUI + Hooking Server Docker Deployment
 echo ====================================================
 echo.
-echo    New install: 2 =^> 3
-echo    Update:      6
-echo.
-echo    Other menus:
-echo      1 - Build images locally (slow, use when offline)
-echo      4 - Stop ComfyPack (containers)
-echo      5 - Check running status
-echo      7 - Reset settings (delete .env and regenerate)
+echo    New install: 2 =^> 6
+echo    Update:      4
 echo.
 echo ====================================================
 echo.
 
-:: ─── Docker Check ───────────────────────────────────────
+:: --- Docker Check ---------------------------------------
 where docker >nul 2>&1
 if %errorlevel% neq 0 (
     echo [X] Docker is not installed.
@@ -37,7 +36,7 @@ if %errorlevel% neq 0 (
     echo.
     echo After installation, start Docker Desktop and run this script again.
     pause
-    exit
+    exit /b
 )
 
 docker info >nul 2>&1
@@ -45,13 +44,43 @@ if %errorlevel% neq 0 (
     echo [X] Docker is not running.
     echo Please start Docker Desktop and try again.
     pause
-    exit
+    exit /b
 )
 
 echo [OK] Docker is running.
 echo.
 
-:: ─── Project Path ───────────────────────────────────────
+:: --- NVIDIA GPU Check ------------------------------------
+where nvidia-smi >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [X] NVIDIA GPU driver not found.
+    echo.
+    echo     ComfyPack requires an NVIDIA GPU - RTX 3050 or higher.
+    echo     Please install the latest NVIDIA driver:
+    echo     https://www.nvidia.com/drivers
+    echo.
+    pause
+    exit /b
+)
+echo [OK] NVIDIA GPU driver detected.
+
+docker info 2>nul | findstr /i "nvidia" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [X] NVIDIA Container Toolkit not found.
+    echo.
+    echo     Docker needs the NVIDIA Container Toolkit to use your GPU.
+    echo     Please install it:
+    echo     https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide
+    echo.
+    echo     After installation, restart Docker Desktop and run this script again.
+    echo.
+    pause
+    exit /b
+)
+echo [OK] NVIDIA Container Toolkit detected.
+echo.
+
+:: --- Project Path ---------------------------------------
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_DIR=%SCRIPT_DIR%.."
 cd /d "%PROJECT_DIR%"
@@ -60,7 +89,7 @@ set "PROJECT_DIR=%cd%"
 echo Project path: %PROJECT_DIR%
 echo.
 
-:: ─── Config ─────────────────────────────────────────────
+:: --- Config ---------------------------------------------
 set "ENV_FILE=%PROJECT_DIR%\.env"
 set "CONFIG_DIR=%PROJECT_DIR%\config"
 
@@ -120,7 +149,35 @@ echo [OK] Initial setup complete.
 
 :skip_env
 
-:: ─── WSL2 memory config ─────────────────────────────────
+:: --- Clone repos if missing (handles first install + upgrades) ---
+set "USER_NODES_DIR=%PROJECT_DIR%\user_nodes"
+set "HOOKING_APP_DIR=%PROJECT_DIR%\hooking_server\app"
+
+if not exist "%USER_NODES_DIR%" mkdir "%USER_NODES_DIR%"
+
+if not exist "%USER_NODES_DIR%\comfyui-soya-custom-nodes" (
+    echo.
+    echo [CLONE] comfyui-soya-custom-nodes...
+    git clone -b %SOYA_NODES_BRANCH% https://github.com/lbh848/Comfyui-soya-custom-nodes.git "%USER_NODES_DIR%\comfyui-soya-custom-nodes"
+    if !errorlevel! neq 0 echo [X] Failed to clone soya-custom-nodes.
+)
+
+if not exist "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" (
+    echo.
+    echo [CLONE] comfyui-workflow-to-api-converter-endpoint...
+    git clone -b %WF_CONVERTER_BRANCH% https://github.com/lbh848/comfyui-workflow-to-api-converter-endpoint.git "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint"
+    if !errorlevel! neq 0 echo [X] Failed to clone workflow-to-api-converter-endpoint.
+)
+
+if not exist "%HOOKING_APP_DIR%\.git" (
+    if not exist "%HOOKING_APP_DIR%" mkdir "%HOOKING_APP_DIR%"
+    echo.
+    echo [CLONE] comfyui_hooking_server...
+    git clone -b %HOOKING_SERVER_BRANCH% https://github.com/lbh848/comfyui_hooking_server.git "%HOOKING_APP_DIR%"
+    if !errorlevel! neq 0 echo [X] Failed to clone hooking_server.
+)
+
+:: --- WSL2 memory config ---------------------------------
 set "WSLCONFIG_SRC=%PROJECT_DIR%\config\wslconfig"
 set "WSLCONFIG_DST=%USERPROFILE%\.wslconfig"
 if exist "%WSLCONFIG_SRC%" (
@@ -136,42 +193,56 @@ if exist "%WSLCONFIG_SRC%" (
     )
 )
 
-:: ─── Main Menu ──────────────────────────────────────────
+:: --- Main Menu ------------------------------------------
 :menu
 echo.
 echo ====================================================
 echo    ComfyPack Menu
 echo ====================================================
 echo.
-echo   1. Build Docker images (local)
-echo   2. Pull images from Docker Hub (recommended)
-echo   3. Start ComfyPack (containers)
-echo   4. Stop ComfyPack (containers)
-echo   5. Running status
-echo   6. Update to latest version
-echo   7. Reset settings (reconfigure .env)
-echo   8. Remove containers
-echo   9. Remove images (free disk space)
+echo   1. Build images (local)
+echo   2. Pull images from Docker Hub
+echo   3. Running status
+echo   4. Update to latest version
+echo   5. Start WSL
+echo   6. Start (container)
+echo   7. Stop (container)
+echo   8. Stop WSL (free memory)
+echo   9. Remove (container)
+echo  10. Remove images (free disk space)
+echo  11. Reset settings (.env)
 echo   0. Exit
 echo.
 set "CHOICE="
-set /p "CHOICE=Select [0-9]: "
+set /p "CHOICE=Select: "
 
 if "%CHOICE%"=="1" goto build
 if "%CHOICE%"=="2" goto pull
-if "%CHOICE%"=="3" goto start
-if "%CHOICE%"=="4" goto stop
-if "%CHOICE%"=="5" goto status
-if "%CHOICE%"=="6" goto update
-if "%CHOICE%"=="7" goto reset
-if "%CHOICE%"=="8" goto remove_containers
-if "%CHOICE%"=="9" goto remove_images
+if "%CHOICE%"=="3" goto status
+if "%CHOICE%"=="4" goto update
+if "%CHOICE%"=="5" goto wsl_start
+if "%CHOICE%"=="6" goto start
+if "%CHOICE%"=="7" goto stop
+if "%CHOICE%"=="8" goto wsl_stop
+if "%CHOICE%"=="9" goto remove_containers
+if "%CHOICE%"=="10" goto remove_images
+if "%CHOICE%"=="11" goto reset
 if "%CHOICE%"=="0" goto quit
 goto menu
 
 :build
 echo.
-echo Building Docker images. This may take 30-60 minutes...
+echo [!] WARNING: This will rebuild images from scratch (no cache).
+echo     - Takes 30-60 minutes depending on your PC.
+echo     - Existing images will be replaced.
+echo.
+echo     If images are already built, use menu 4 (Update) instead.
+echo.
+set "CONFIRM_BUILD="
+set /p "CONFIRM_BUILD=Build images from scratch? (y/N): "
+if /i not "%CONFIRM_BUILD%"=="y" goto menu
+echo.
+echo Building Docker images...
 echo.
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" build --no-cache
 if %errorlevel%==0 (
@@ -202,27 +273,35 @@ if %errorlevel%==0 (
     echo.
     echo [X] Image download failed.
     echo     Images may not be on Docker Hub yet.
-    echo     Try option 1 (local build) instead.
+    echo     Try option 1 - local build instead.
 )
+pause
+goto menu
+
+:wsl_start
+echo.
+echo Starting WSL...
+wsl --exec true 2>nul
+echo [OK] WSL is ready.
 pause
 goto menu
 
 :start
 echo.
-echo Starting ComfyPack (containers)...
+echo Starting containers...
 echo.
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
 if %errorlevel%==0 (
     echo.
     echo ====================================================
-    echo    ComfyPack (containers) is running!
+    echo    ComfyPack - containers running!
     echo ====================================================
     echo.
     echo    ComfyUI:        http://localhost:8188
     echo    Hooking Server:  http://localhost:8189
     echo.
     echo    First run may take time to load models.
-    echo    To stop, run this script and select option 4.
+    echo    To stop, run this script and select option 7.
     echo.
 ) else (
     echo.
@@ -233,9 +312,9 @@ goto menu
 
 :stop
 echo.
-echo Stopping ComfyPack (containers)...
-docker compose -f "%PROJECT_DIR%\docker-compose.yml" down
-echo [OK] ComfyPack (containers) stopped.
+echo Stopping containers...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" stop
+echo [OK] Containers stopped. Select menu 6 to restart.
 pause
 goto menu
 
@@ -250,63 +329,173 @@ goto menu
 
 :reset
 echo.
-echo [!] Delete .env file?
-echo     It will be regenerated with defaults on next run.
-echo.
+echo [!] Delete .env and regenerate with defaults?
 set "CONFIRM_RESET="
 set /p "CONFIRM_RESET=Are you sure? (y/N): "
 if /i not "%CONFIRM_RESET%"=="y" goto menu
 del "%ENV_FILE%" 2>nul
-echo [OK] .env file deleted. Run again to reconfigure.
+echo [OK] .env deleted. It will be recreated on next run.
 pause
 goto menu
 
-:: ─── Update ──────────────────────────────────────────────
+:: --- Update ----------------------------------------------
 :update
 echo.
 echo ====================================================
-echo    ComfyPack (containers) Update
+echo    ComfyPack Update
 echo ====================================================
 echo.
 
-echo [1/4] Downloading latest code...
-git -C "%PROJECT_DIR%" pull
-if %errorlevel% neq 0 (
-    echo.
-    echo [X] Code update failed.
-    echo     Git may not be installed, or this is not a Git repository.
-    echo     Please download manually and overwrite files.
-    pause
-    goto menu
+set "UPD_OK=0"
+set "UPD_FAIL=0"
+set "UPD_SKIP=0"
+
+echo [1/6] Stopping containers...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" stop 2>nul
+
+echo.
+echo [2/6] Updating scripts (git pull)...
+git -C "%PROJECT_DIR%" pull --rebase --autostash 2>nul
+if !errorlevel! equ 0 (
+    echo   [OK] Scripts updated.
+    set /a UPD_OK+=1
+) else (
+    echo   [--] Skip (downloaded as ZIP, or no updates available^).
+    set /a UPD_SKIP+=1
 )
 
 echo.
-echo [2/4] Downloading latest Docker images...
-docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull
+echo [3/6] Updating Docker images...
+docker compose -f "%PROJECT_DIR%\docker-compose.yml" pull 2>nul
+if !errorlevel! equ 0 (
+    echo   [OK] Images updated.
+    set /a UPD_OK+=1
+) else (
+    echo   [--] Image pull failed or images not on Docker Hub yet.
+    set /a UPD_FAIL+=1
+)
 
 echo.
-echo [3/4] Cleaning up old images...
-docker image prune -f
+echo [4/6] Updating custom nodes...
+set "USER_NODES_DIR=%PROJECT_DIR%\user_nodes"
+set "HOOKING_APP_DIR=%PROJECT_DIR%\hooking_server\app"
 
 echo.
-echo [4/4] Restarting ComfyPack (containers)...
+echo   Target: soya-custom-nodes=%SOYA_NODES_BRANCH%, workflow=%WF_CONVERTER_BRANCH%, hooking=%HOOKING_SERVER_BRANCH%
+echo   Current:
+if exist "%USER_NODES_DIR%\comfyui-soya-custom-nodes\.git" (
+    for /f "tokens=*" %%b in ('git -C "%USER_NODES_DIR%\comfyui-soya-custom-nodes" rev-parse --abbrev-ref HEAD 2^>nul') do echo     soya-custom-nodes: %%b
+)
+if exist "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint\.git" (
+    for /f "tokens=*" %%b in ('git -C "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" rev-parse --abbrev-ref HEAD 2^>nul') do echo     workflow-to-api-converter-endpoint: %%b
+)
+if exist "%HOOKING_APP_DIR%\.git" (
+    for /f "tokens=*" %%b in ('git -C "%HOOKING_APP_DIR%" rev-parse --abbrev-ref HEAD 2^>nul') do echo     hooking_server: %%b
+)
+echo.
+
+if exist "%USER_NODES_DIR%\comfyui-soya-custom-nodes\.git" (
+    echo   - soya-custom-nodes...
+    git -C "%USER_NODES_DIR%\comfyui-soya-custom-nodes" fetch --all 2>nul
+    git -C "%USER_NODES_DIR%\comfyui-soya-custom-nodes" checkout %SOYA_NODES_BRANCH% 2>nul || git -C "%USER_NODES_DIR%\comfyui-soya-custom-nodes" checkout -b %SOYA_NODES_BRANCH% origin/%SOYA_NODES_BRANCH%
+    git -C "%USER_NODES_DIR%\comfyui-soya-custom-nodes" pull --rebase --autostash
+    if !errorlevel! equ 0 (
+        echo     [OK]
+        set /a UPD_OK+=1
+    ) else (
+        echo     [FAIL] Update failed. Check for conflicts.
+        set /a UPD_FAIL+=1
+    )
+) else (
+    echo   [-] soya-custom-nodes not found. Skipping.
+    set /a UPD_SKIP+=1
+)
+
+if exist "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint\.git" (
+    echo   - workflow-to-api-converter-endpoint...
+    git -C "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" fetch --all 2>nul
+    git -C "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" checkout %WF_CONVERTER_BRANCH% 2>nul || git -C "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" checkout -b %WF_CONVERTER_BRANCH% origin/%WF_CONVERTER_BRANCH%
+    git -C "%USER_NODES_DIR%\comfyui-workflow-to-api-converter-endpoint" pull --rebase --autostash
+    if !errorlevel! equ 0 (
+        echo     [OK]
+        set /a UPD_OK+=1
+    ) else (
+        echo     [FAIL] Update failed. Check for conflicts.
+        set /a UPD_FAIL+=1
+    )
+) else (
+    echo   [-] workflow-to-api-converter-endpoint not found. Skipping.
+    set /a UPD_SKIP+=1
+)
+
+if exist "%HOOKING_APP_DIR%\.git" (
+    echo   - hooking_server...
+    git -C "%HOOKING_APP_DIR%" fetch --all 2>nul
+    git -C "%HOOKING_APP_DIR%" checkout %HOOKING_SERVER_BRANCH% 2>nul || git -C "%HOOKING_APP_DIR%" checkout -b %HOOKING_SERVER_BRANCH% origin/%HOOKING_SERVER_BRANCH%
+    git -C "%HOOKING_APP_DIR%" pull --rebase --autostash
+    if !errorlevel! equ 0 (
+        echo     [OK]
+        set /a UPD_OK+=1
+    ) else (
+        echo     [FAIL] Update failed. Check for conflicts.
+        set /a UPD_FAIL+=1
+    )
+) else (
+    echo   [-] hooking_server not found. Skipping.
+    set /a UPD_SKIP+=1
+)
+
+echo.
+echo [5/6] Cleaning up old images...
+docker image prune -f >nul
+
+echo.
+echo [6/6] Restarting containers...
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" up -d
+if !errorlevel! equ 0 (
+    echo   [OK] Containers started.
+    set /a UPD_OK+=1
+) else (
+    echo   [FAIL] Failed to start containers.
+    set /a UPD_FAIL+=1
+)
 
 echo.
-echo [OK] Update complete!
+echo ====================================================
+echo    Update Results
+echo    OK: !UPD_OK!   Failed: !UPD_FAIL!   Skipped: !UPD_SKIP!
+echo ====================================================
+echo.
+
+if !UPD_FAIL! GTR 0 (
+    echo [!] Some updates failed. The app may still work.
+    echo     Check the messages above for details.
+) else (
+    echo [OK] Update complete!
+    echo.
+    echo     ComfyUI:        http://localhost:8188
+    echo     Hooking Server:  http://localhost:8189
+)
+
 pause
 goto menu
 
-:: ─── Remove Containers ──────────────────────────────────
+:: --- Remove Containers ----------------------------------
 :remove_containers
 echo.
-echo Removing ComfyPack (containers)...
+echo [!] This will remove containers. pip installs inside will be lost.
+echo     Models, patch data, and config are safe on your host.
+echo.
+set "CONFIRM_RM="
+set /p "CONFIRM_RM=Remove containers? (y/N): "
+if /i not "%CONFIRM_RM%"=="y" goto menu
+echo.
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" down
-echo [OK] Containers removed. Select menu 3 to start again.
+echo [OK] Containers removed. Select menu 3 to start fresh.
 pause
 goto menu
 
-:: ─── Remove Images ──────────────────────────────────────
+:: --- Remove Images --------------------------------------
 :remove_images
 echo.
 echo [!] This will remove ComfyPack Docker images.
@@ -334,4 +523,12 @@ goto menu
 :quit
 echo.
 pause
-exit
+exit /b
+
+:wsl_stop
+echo.
+echo Shutting down WSL to free memory...
+wsl --shutdown 2>nul
+echo [OK] WSL shutdown complete. Memory freed.
+pause
+goto menu

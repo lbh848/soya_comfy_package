@@ -10,7 +10,8 @@ FROM nvidia/cuda:12.8.1-devel-ubuntu22.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN rm -f /etc/apt/sources.list.d/cuda* /etc/apt/sources.list.d/nvidia* \
+    && apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y --no-install-recommends \
@@ -35,7 +36,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
 # ─── System packages + Python 3.12 (deadsnakes PPA) ─────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN rm -f /etc/apt/sources.list.d/cuda* /etc/apt/sources.list.d/nvidia* \
+    && apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y --no-install-recommends \
@@ -91,13 +93,6 @@ RUN cd custom_nodes \
     && cd ComfyUI-Easy-Use && pip install --no-cache-dir -r requirements.txt || true && cd .. \
     && git clone https://github.com/willmiao/ComfyUI-Lora-Manager.git \
     && cd ComfyUI-Lora-Manager && pip install --no-cache-dir -r requirements.txt || true && cd ..
-
-# ─── Custom Nodes (Manual clone - Soya) ──────────────────
-RUN cd custom_nodes \
-    && git clone -b v3.1 https://github.com/lbh848/Comfyui-soya-custom-nodes.git comfyui-soya-custom-nodes \
-    && cd comfyui-soya-custom-nodes && pip install --no-cache-dir -r requirements.txt || true && cd .. \
-    && git clone https://github.com/lbh848/comfyui-workflow-to-api-converter-endpoint.git \
-    && cd comfyui-workflow-to-api-converter-endpoint && pip install --no-cache-dir -r requirements.txt || true && cd ..
 
 # ─── Extra model paths (mount point) ─────────────────────
 COPY extra_model_paths.yaml /app/comfyui/extra_model_paths.yaml

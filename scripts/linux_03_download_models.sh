@@ -15,7 +15,7 @@ FAILED=0
 SKIPPED=0
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MODELS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/models"
+MODELS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/comfyui/models"
 
 echo ""
 echo "══════════════════════════════════════════════════════"
@@ -60,19 +60,15 @@ echo "  3. qwen_3_06b_base.safetensors        - Text understanding AI (prompt an
 echo "  4. ViT-L14.safetensors                - Image feature extraction"
 echo "  5. CLIP-ViT-bigG-14-... (~3.5GB)      - IPAdapter vision model"
 echo ""
-echo " [Character / Pose Control]"
-echo "  6. noobIPAMARK1_mark1                 - Character face/style reference"
-echo "  7. illustriousXL_v10_openpose         - Pose control"
-echo ""
 echo " [Upscaling / Detection]"
-echo "  8. 2x-AnimeSharpV4_Fast_RCAN_PU       - Image quality enhancement (2x upscale)"
-echo "  9. face_yolov8m.pt                    - Face detection (accurate)"
-echo " 10. face_yolov8n.pt                    - Face detection (lightweight)"
-echo " 11. hand_yolov8s.pt                    - Hand detection"
-echo " 12. eye_seg_v2.ckpt                    - Eye segmentation (accurate)"
-echo " 13. eyebrow_seg.ckpt                   - Eyebrow segmentation"
+echo "  6. 2x-AnimeSharpV4_Fast_RCAN_PU       - Image quality enhancement (2x upscale)"
+echo "  7. face_yolov8m.pt                    - Face detection (accurate)"
+echo "  8. face_yolov8n.pt                    - Face detection (lightweight)"
+echo "  9. hand_yolov8s.pt                    - Hand detection"
+echo " 10. eye_seg_v2.ckpt                    - Eye segmentation (accurate)"
+echo " 11. eyebrow_seg.ckpt                   - Eyebrow segmentation"
 echo ""
-echo " Total: 13 files (~8-10GB)"
+echo " Total: 11 files (~8-10GB)"
 echo " Already downloaded files will be skipped automatically."
 echo ""
 
@@ -98,12 +94,12 @@ download() {
     local num="$4"
 
     if [ -f "$file_path" ]; then
-        echo -e " [${num}/13] ${YELLOW}Skipping${NC} - $(basename "$file_path") (already exists)"
+        echo -e " [${num}/11] ${YELLOW}Skipping${NC} - $(basename "$file_path") (already exists)"
         ((SKIPPED++))
         return 0
     fi
 
-    echo -e " [${num}/13] Downloading - $(basename "$file_path") (${desc})"
+    echo -e " [${num}/11] Downloading - $(basename "$file_path") (${desc})"
     curl -L -# -C - -o "$file_path" "$url"
     local rc=$?
 
@@ -151,10 +147,10 @@ download "$MODELS_DIR/clip/ViT-L14.safetensors" \
 # #5 CLIP-ViT-bigG-14 (clip_vision) - largest file
 FILE="$MODELS_DIR/clip_vision/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors"
 if [ -f "$FILE" ]; then
-    echo -e " [ 5/13] ${YELLOW}Skipping${NC} - CLIP-ViT-bigG-14 (already exists)"
+    echo -e " [ 5/11] ${YELLOW}Skipping${NC} - CLIP-ViT-bigG-14 (already exists)"
     ((SKIPPED++))
 else
-    echo -e " [ 5/13] Downloading - CLIP-ViT-bigG-14 (IPAdapter vision model, ${YELLOW}~3.5GB${NC})"
+    echo -e " [ 5/11] Downloading - CLIP-ViT-bigG-14 (IPAdapter vision model, ${YELLOW}~3.5GB${NC})"
     echo "         * This is the largest file. It may take a long time."
     curl -L -# -C - -o "$FILE" "https://huggingface.co/axssel/IPAdapter_ClipVision_models/resolve/main/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors"
     if [ $? -eq 0 ] && [ -f "$FILE" ]; then
@@ -174,92 +170,35 @@ else
     fi
 fi
 
-# #6 noobIPAMARK1_mark1 (ipadapter) - Civitai direct
-download "$MODELS_DIR/ipadapter/noobIPAMARK1_mark1.safetensors" \
-    "https://civitai.com/api/download/models/1121145?type=Model&format=SafeTensor" \
-    "Character face/style reference" "6"
-
-# #7 illustriousXL_v10_openpose (controlnet) - Civitai API lookup
-FILE="$MODELS_DIR/controlnet/illustriousXL_v10_openpose.safetensors"
-if [ -f "$FILE" ]; then
-    echo -e " [ 7/13] ${YELLOW}Skipping${NC} - illustriousXL_v10_openpose (already exists)"
-    ((SKIPPED++))
-else
-    echo -e " [ 7/13] illustriousXL_v10_openpose (Pose control)"
-    echo "         Fetching download info from Civitai..."
-
-    VERSION_ID=""
-    if [ -n "$PYTHON_CMD" ]; then
-        VERSION_ID=$($PYTHON_CMD -c "
-import urllib.request, json
-try:
-    with urllib.request.urlopen('https://civitai.com/api/v1/models/1359846', timeout=15) as r:
-        data = json.loads(r.read())
-        print(data['modelVersions'][0]['id'])
-except:
-    print('ERROR')
-" 2>/dev/null)
-    elif command -v jq &>/dev/null; then
-        VERSION_ID=$(curl -s "https://civitai.com/api/v1/models/1359846" | jq -r '.modelVersions[0].id // "ERROR"' 2>/dev/null)
-    else
-        VERSION_ID="ERROR"
-    fi
-
-    if [ "$VERSION_ID" = "ERROR" ] || [ -z "$VERSION_ID" ]; then
-        echo -e "         ${RED}Civitai API lookup failed.${NC}"
-        echo "         Please download manually:"
-        echo "         https://civitai.com/models/1359846"
-        ((FAILED++))
-    else
-        echo "         Version ID: $VERSION_ID - Downloading..."
-        curl -L -# -C - -o "$FILE" "https://civitai.com/api/download/models/${VERSION_ID}?type=Model&format=SafeTensor"
-        if [ $? -eq 0 ] && [ -f "$FILE" ]; then
-            fsize=$(stat -c%s "$FILE" 2>/dev/null || echo 0)
-            if [ "$fsize" -lt 1048576 ]; then
-                echo -e "         ${RED}Failed - file corrupted${NC} (re-run to retry)"
-                rm -f "$FILE" 2>/dev/null
-                ((FAILED++))
-            else
-                echo "         Done!"
-                ((SUCCESS++))
-            fi
-        else
-            echo -e "         ${RED}Failed!${NC}"
-            rm -f "$FILE" 2>/dev/null
-            ((FAILED++))
-        fi
-    fi
-fi
-
-# #8 2x-AnimeSharpV4 (upscale_models)
+# #6 2x-AnimeSharpV4 (upscale_models)
 download "$MODELS_DIR/upscale_models/2x-AnimeSharpV4_Fast_RCAN_PU.safetensors" \
     "https://huggingface.co/Kim2091/2x-AnimeSharpV4/resolve/1a9339b5c308ab3990f6233be2c1169a75772878/2x-AnimeSharpV4_Fast_RCAN_PU.safetensors" \
-    "Image quality enhancement" "8"
+    "Image quality enhancement" "6"
 
-# #9 face_yolov8m.pt (bbox)
+# #7 face_yolov8m.pt (bbox)
 download "$MODELS_DIR/bbox/face_yolov8m.pt" \
     "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt" \
-    "Face detection (accurate)" "9"
+    "Face detection (accurate)" "7"
 
-# #10 face_yolov8n.pt (bbox)
+# #8 face_yolov8n.pt (bbox)
 download "$MODELS_DIR/bbox/face_yolov8n.pt" \
     "https://huggingface.co/Tenofas/ComfyUI/resolve/d79945fb5c16e8aef8a1eb3ba1788d72152c6d96/ultralytics/bbox/face_yolov8n.pt" \
-    "Face detection (lightweight)" "10"
+    "Face detection (lightweight)" "8"
 
-# #11 hand_yolov8s.pt (bbox)
+# #9 hand_yolov8s.pt (bbox)
 download "$MODELS_DIR/bbox/hand_yolov8s.pt" \
     "https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt" \
-    "Hand detection" "11"
+    "Hand detection" "9"
 
-# #12 eye_seg_v2.ckpt (bbox)
+# #10 eye_seg_v2.ckpt (bbox)
 download "$MODELS_DIR/bbox/eye_seg_v2.ckpt" \
     "https://huggingface.co/byung-hyun/eye_segmentation_model/resolve/main/eye_seg_v2.ckpt" \
-    "Eye segmentation (accurate)" "12"
+    "Eye segmentation (accurate)" "10"
 
-# #13 eyebrow_seg.ckpt (bbox)
+# #11 eyebrow_seg.ckpt (bbox)
 download "$MODELS_DIR/bbox/eyebrow_seg.ckpt" \
     "https://huggingface.co/byung-hyun/eye_segmentation_model/resolve/main/eyebrow_seg.ckpt" \
-    "Eyebrow segmentation" "13"
+    "Eyebrow segmentation" "11"
 
 # ══════════════════════════════════════════════════════════
 # Summary
@@ -282,11 +221,11 @@ echo "   Manual Download Required"
 echo "══════════════════════════════════════════════════════"
 echo ""
 echo " The following files cannot be auto-downloaded due to"
-echo " copyright restrictions. Please open each link in your"
-echo " browser, download manually, and place in the specified"
-echo " folder."
+echo " copyright/login requirements. Please open each link"
+echo " in your browser, download manually, and place in the"
+echo " specified folder."
 echo ""
-echo " ─── Checkpoints (models/checkpoints/) ─────────────"
+echo " ─── Checkpoints (comfyui/models/checkpoints/) ──────"
 echo ""
 echo "  1. rinAnim8drawIllustrious_v31"
 echo "     - Animation-style image generation checkpoint"
@@ -296,9 +235,21 @@ echo "  2. rinFlanimeIllustrious_v30"
 echo "     - Flat animation-style image generation checkpoint"
 echo "     - Search and download from HuggingFace"
 echo ""
-echo " ─── LoRA (models/loras/) ────────────────────────"
+echo " ─── IPAdapter (comfyui/models/ipadapter/) ────────"
 echo ""
-echo "  3. dmd2_sdxl_4step_lora.safetensors"
+echo "  3. noobIPAMARK1_mark1.safetensors"
+echo "     - Character face/style reference"
+echo "     - Civitai login required: https://civitai.com/models/1121145"
+echo ""
+echo " ─── ControlNet (comfyui/models/controlnet/) ──────"
+echo ""
+echo "  4. illustriousXL_v10_openpose.safetensors"
+echo "     - Pose control"
+echo "     - Civitai login required: https://civitai.com/models/1159846"
+echo ""
+echo " ─── LoRA (comfyui/models/loras/) ─────────────────"
+echo ""
+echo "  5. dmd2_sdxl_4step_lora.safetensors"
 echo "     - Image generation speedup (4-step acceleration)"
 echo ""
 echo "  * Additional LoRA files will be announced later."

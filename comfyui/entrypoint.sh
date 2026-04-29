@@ -9,4 +9,4 @@ python /app/restore_nodes.py
 
 # Start ComfyUI
 echo "[entrypoint] Starting ComfyUI..."
-exec python main.py --listen 0.0.0.0 --port 8188
+exec python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header '*' --fast

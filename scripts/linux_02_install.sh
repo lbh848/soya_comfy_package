@@ -9,6 +9,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# --- Branch Configuration (change these for deployment) ---
+SOYA_NODES_BRANCH="main"
+WF_CONVERTER_BRANCH="main"
+HOOKING_SERVER_BRANCH="main"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -141,6 +146,43 @@ EOF
     ok "Initial setup complete."
 fi
 
+# ─── Clone repos if missing ──────────────────────────────
+USER_NODES_DIR="$PROJECT_DIR/user_nodes"
+HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
+
+mkdir -p "$USER_NODES_DIR"
+
+if [ ! -d "$USER_NODES_DIR/comfyui-soya-custom-nodes/.git" ]; then
+    echo ""
+    echo "[CLONE] comfyui-soya-custom-nodes..."
+    if git clone -b "$SOYA_NODES_BRANCH" https://github.com/lbh848/Comfyui-soya-custom-nodes.git "$USER_NODES_DIR/comfyui-soya-custom-nodes"; then
+        ok "soya-custom-nodes cloned"
+    else
+        fail "Failed to clone soya-custom-nodes"
+    fi
+fi
+
+if [ ! -d "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint/.git" ]; then
+    echo ""
+    echo "[CLONE] comfyui-workflow-to-api-converter-endpoint..."
+    if git clone -b "$WF_CONVERTER_BRANCH" https://github.com/lbh848/comfyui-workflow-to-api-converter-endpoint.git "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint"; then
+        ok "workflow-to-api-converter-endpoint cloned"
+    else
+        fail "Failed to clone workflow-to-api-converter-endpoint"
+    fi
+fi
+
+if [ ! -d "$HOOKING_APP_DIR/.git" ]; then
+    mkdir -p "$HOOKING_APP_DIR"
+    echo ""
+    echo "[CLONE] comfyui_hooking_server..."
+    if git clone -b "$HOOKING_SERVER_BRANCH" https://github.com/lbh848/comfyui_hooking_server.git "$HOOKING_APP_DIR"; then
+        ok "hooking_server cloned"
+    else
+        fail "Failed to clone hooking_server"
+    fi
+fi
+
 # ─── Menu ────────────────────────────────────────────────
 while true; do
     echo ""
@@ -197,25 +239,138 @@ while true; do
             docker compose -f "$PROJECT_DIR/docker-compose.yml" ps
             ;;
         6)
+            UPD_OK=0
+            UPD_FAIL=0
+            UPD_SKIP=0
+
             echo "===================================================="
-            echo "   ComfyPack (containers) Update"
+            echo "   ComfyPack Update"
             echo "===================================================="
             echo ""
-            echo "[1/4] Downloading latest code..."
-            if ! git -C "$PROJECT_DIR" pull; then
-                fail "Code update failed. Not a Git repository?"
-                continue
+
+            echo "[1/6] Stopping containers..."
+            docker compose -f "$PROJECT_DIR/docker-compose.yml" stop 2>/dev/null || true
+
+            echo ""
+            echo "[2/6] Updating scripts (git pull)..."
+            if git -C "$PROJECT_DIR" pull --rebase --autostash 2>/dev/null; then
+                ok "Scripts updated."
+                ((UPD_OK++))
+            else
+                warn "Skip (downloaded as ZIP, or no updates available)."
+                ((UPD_SKIP++))
+            fi
+
+            echo ""
+            echo "[3/6] Updating Docker images..."
+            if docker compose -f "$PROJECT_DIR/docker-compose.yml" pull 2>/dev/null; then
+                ok "Images updated."
+                ((UPD_OK++))
+            else
+                warn "Image pull failed or images not on Docker Hub yet."
+                ((UPD_FAIL++))
+            fi
+
+            echo ""
+            echo "[4/6] Updating custom nodes..."
+            USER_NODES_DIR="$PROJECT_DIR/user_nodes"
+            HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
+
+            echo ""
+            echo "  Target: soya-custom-nodes=$SOYA_NODES_BRANCH, workflow=$WF_CONVERTER_BRANCH, hooking=$HOOKING_SERVER_BRANCH"
+            echo "  Current:"
+            if [ -d "$USER_NODES_DIR/comfyui-soya-custom-nodes/.git" ]; then
+                BRANCH=$(git -C "$USER_NODES_DIR/comfyui-soya-custom-nodes" rev-parse --abbrev-ref HEAD 2>/dev/null)
+                echo "    soya-custom-nodes: $BRANCH"
+            fi
+            if [ -d "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint/.git" ]; then
+                BRANCH=$(git -C "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint" rev-parse --abbrev-ref HEAD 2>/dev/null)
+                echo "    workflow-to-api-converter-endpoint: $BRANCH"
+            fi
+            if [ -d "$HOOKING_APP_DIR/.git" ]; then
+                BRANCH=$(git -C "$HOOKING_APP_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null)
+                echo "    hooking_server: $BRANCH"
             fi
             echo ""
-            echo "[2/4] Downloading latest Docker images..."
-            docker compose -f "$PROJECT_DIR/docker-compose.yml" pull
+
+            if [ -d "$USER_NODES_DIR/comfyui-soya-custom-nodes/.git" ]; then
+                echo "  - soya-custom-nodes..."
+                git -C "$USER_NODES_DIR/comfyui-soya-custom-nodes" fetch --all 2>/dev/null
+                git -C "$USER_NODES_DIR/comfyui-soya-custom-nodes" checkout "$SOYA_NODES_BRANCH" 2>/dev/null || git -C "$USER_NODES_DIR/comfyui-soya-custom-nodes" checkout -b "$SOYA_NODES_BRANCH" "origin/$SOYA_NODES_BRANCH"
+                if git -C "$USER_NODES_DIR/comfyui-soya-custom-nodes" pull --rebase --autostash; then
+                    ok "soya-custom-nodes updated"
+                    ((UPD_OK++))
+                else
+                    fail "soya-custom-nodes update failed. Check for conflicts."
+                    ((UPD_FAIL++))
+                fi
+            else
+                warn "soya-custom-nodes not found. Skipping."
+                ((UPD_SKIP++))
+            fi
+
+            if [ -d "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint/.git" ]; then
+                echo "  - workflow-to-api-converter-endpoint..."
+                git -C "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint" fetch --all 2>/dev/null
+                git -C "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint" checkout "$WF_CONVERTER_BRANCH" 2>/dev/null || git -C "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint" checkout -b "$WF_CONVERTER_BRANCH" "origin/$WF_CONVERTER_BRANCH"
+                if git -C "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint" pull --rebase --autostash; then
+                    ok "workflow-to-api-converter-endpoint updated"
+                    ((UPD_OK++))
+                else
+                    fail "workflow-to-api-converter-endpoint update failed."
+                    ((UPD_FAIL++))
+                fi
+            else
+                warn "workflow-to-api-converter-endpoint not found. Skipping."
+                ((UPD_SKIP++))
+            fi
+
+            if [ -d "$HOOKING_APP_DIR/.git" ]; then
+                echo "  - hooking_server..."
+                git -C "$HOOKING_APP_DIR" fetch --all 2>/dev/null
+                git -C "$HOOKING_APP_DIR" checkout "$HOOKING_SERVER_BRANCH" 2>/dev/null || git -C "$HOOKING_APP_DIR" checkout -b "$HOOKING_SERVER_BRANCH" "origin/$HOOKING_SERVER_BRANCH"
+                if git -C "$HOOKING_APP_DIR" pull --rebase --autostash; then
+                    ok "hooking_server updated"
+                    ((UPD_OK++))
+                else
+                    fail "hooking_server update failed."
+                    ((UPD_FAIL++))
+                fi
+            else
+                warn "hooking_server not found. Skipping."
+                ((UPD_SKIP++))
+            fi
+
             echo ""
-            echo "[3/4] Cleaning up old images..."
-            docker image prune -f
+            echo "[5/6] Cleaning up old images..."
+            docker image prune -f >/dev/null
+
             echo ""
-            echo "[4/4] Restarting ComfyPack (containers)..."
-            docker compose -f "$PROJECT_DIR/docker-compose.yml" up -d
-            ok "Update complete!"
+            echo "[6/6] Restarting containers..."
+            if docker compose -f "$PROJECT_DIR/docker-compose.yml" up -d; then
+                ok "Containers started."
+                ((UPD_OK++))
+            else
+                fail "Failed to start containers."
+                ((UPD_FAIL++))
+            fi
+
+            echo ""
+            echo "===================================================="
+            echo "   Update Results"
+            echo "   OK: $UPD_OK   Failed: $UPD_FAIL   Skipped: $UPD_SKIP"
+            echo "===================================================="
+            echo ""
+
+            if [ "$UPD_FAIL" -gt 0 ]; then
+                warn "Some updates failed. The app may still work."
+                echo "  Check the messages above for details."
+            else
+                ok "Update complete!"
+                echo ""
+                echo "  ComfyUI:        http://localhost:8188"
+                echo "  Hooking Server:  http://localhost:8189"
+            fi
             ;;
         7)
             echo ""
