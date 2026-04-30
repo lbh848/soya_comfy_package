@@ -12,9 +12,13 @@ ENV REAL_COMFY_PORT=8188
 
 # ─── System packages (for OpenCV, ONNX, etc.) ────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
+    git curl \
     libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 \
     && rm -rf /var/lib/apt/lists/*
+
+# ─── Cloudflare Quick Tunnel (cloudflared) ──────────────
+RUN curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+    -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
 # ─── Base dependencies (cloned at build time for pip install) ──
 WORKDIR /app

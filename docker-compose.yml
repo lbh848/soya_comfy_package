@@ -41,6 +41,7 @@ services:
       - "${HOOKING_PORT:-8189}:8189"
     volumes:
       - ${HOOKING_SERVER_SRC:-./hooking_server/app}:/app
+      - ${WORKFLOW_PATH:-./comfyui/workflows}:/app/comfyui_workflows:ro
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset:/app/asset
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/asset_data:/app/asset_data
       - ${PATCH_DATA_PATH:-./hooking_server/patch_data}/chain_presets:/app/chain_presets

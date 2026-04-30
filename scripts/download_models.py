@@ -189,10 +189,10 @@ HUGGINGFACE = [
     ("ultralytics/bbox/hand_yolov8s.pt",
      "https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt",
      "Hand detection"),
-    ("ultralytics/bbox/eye_seg_v2.ckpt",
+    ("soya_seg/eye_seg_v2.ckpt",
      "https://huggingface.co/byung-hyun/eye_segmentation_model/resolve/main/eye_seg_v2.ckpt",
      "Eye segmentation"),
-    ("ultralytics/bbox/eyebrow_seg.ckpt",
+    ("soya_seg/eyebrow_seg.ckpt",
      "https://huggingface.co/byung-hyun/eye_segmentation_model/resolve/main/eyebrow_seg.ckpt",
      "Eyebrow segmentation"),
 ]
