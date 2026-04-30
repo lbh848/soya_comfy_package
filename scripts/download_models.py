@@ -57,6 +57,9 @@ NODE_MAP = {
     "UltralyticsDetectorProvider":  ("ultralytics/bbox", [0]),
     "UpscaleModelLoader":           ("upscale_models", [0]),
     "SAM2ModelLoader":              ("sam2", [0]),
+    "UNETLoader":                   ("unet", [0]),
+    "CLIPLoader":                   ("clip", [0]),
+    "VAELoader":                    ("vae", [0]),
 }
 
 # UUID proxy nodes - new ComfyUI node registration format
