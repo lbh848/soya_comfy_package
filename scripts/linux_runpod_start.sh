@@ -5,7 +5,7 @@
 set -e
 
 # --- Branch Configuration ---
-SOYA_NODES_BRANCH="main"
+SOYA_NODES_BRANCH="v3.1"
 WF_CONVERTER_BRANCH="main"
 HOOKING_SERVER_BRANCH="main"
 
