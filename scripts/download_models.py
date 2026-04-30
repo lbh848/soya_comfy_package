@@ -147,7 +147,7 @@ CIVITAI = {
 # Format: model_name → (version_id, filename)
 REQUIRED_VERSIONS = {
     # ── Checkpoints / UNET ──
-    "animayume_v02":                         (2782261, "animayume_v02.safetensors"),
+    "animayume_v02":                         (2753918, "animayume_v02.safetensors"),
     "rinAnim8drawIllustrious_v31":           (2622009, "rinAnim8drawIllustrious_v31.safetensors"),
     "rinFlanimeIllustrious_v30":             (2710976, "rinFlanimeIllustrious_v30.safetensors"),
     # ── LoRA ──
