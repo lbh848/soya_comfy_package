@@ -38,6 +38,10 @@ comfyui/workflows/*
 # ComfyUI user data
 comfyui/input/*
 !comfyui/input/.gitkeep
+!comfyui/input/bekki_default.webp
+!comfyui/input/eri_default.webp
+!comfyui/input/tutorial/
+!comfyui/input/tutorial/*
 comfyui/output/*
 !comfyui/output/.gitkeep
 comfyui/snapshots/*
