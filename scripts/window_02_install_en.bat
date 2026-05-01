@@ -165,7 +165,7 @@ if not exist "%USER_NODES_DIR%" mkdir "%USER_NODES_DIR%"
 if not exist "%USER_NODES_DIR%\comfyui-soya-custom-nodes" (
     echo.
     echo [CLONE] comfyui-soya-custom-nodes...
-    git clone -b %SOYA_NODES_BRANCH% https://github.com/lbh848/Comfyui-soya-custom-nodes.git "%USER_NODES_DIR%\comfyui-soya-custom-nodes"
+    git clone -b %SOYA_NODES_BRANCH% https://github.com/lbh848/comfyui-soya-custom-nodes.git "%USER_NODES_DIR%\comfyui-soya-custom-nodes"
     if !errorlevel! neq 0 echo [X] Failed to clone soya-custom-nodes.
 )
 

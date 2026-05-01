@@ -44,7 +44,7 @@ mkdir -p "$USER_NODES_DIR"
 
 if [ ! -d "$USER_NODES_DIR/comfyui-soya-custom-nodes/.git" ]; then
     echo "[CLONE] soya-custom-nodes..."
-    git clone -b "$SOYA_NODES_BRANCH" https://github.com/lbh848/Comfyui-soya-custom-nodes.git "$USER_NODES_DIR/comfyui-soya-custom-nodes" || echo "[WARN] Clone failed"
+    git clone -b "$SOYA_NODES_BRANCH" https://github.com/lbh848/comfyui-soya-custom-nodes.git "$USER_NODES_DIR/comfyui-soya-custom-nodes" || echo "[WARN] Clone failed"
 fi
 
 if [ ! -d "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint/.git" ]; then

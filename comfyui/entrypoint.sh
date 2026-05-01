@@ -3,9 +3,6 @@ set -e
 
 echo "=== ComfyPack Entrypoint ==="
 
-# Add Impact Pack modules to PYTHONPATH so user nodes can import impact.*
-export PYTHONPATH="/app/comfyui/custom_nodes/ComfyUI-Impact-Pack/modules${PYTHONPATH:+:$PYTHONPATH}"
-
 # Restore user-installed custom nodes from persisted snapshot
 echo "[entrypoint] Restoring custom nodes from snapshot..."
 python /app/restore_nodes.py

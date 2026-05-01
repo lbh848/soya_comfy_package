@@ -152,9 +152,9 @@ HOOKING_APP_DIR="$PROJECT_DIR/hooking_server/app"
 
 mkdir -p "$USER_NODES_DIR"
 
-if [ ! -d "$USER_NODES_DIR/comfyui-soya-custom-nodes/.git" ]; then
+if [ ! -d "$USER_NODES_DIR/zzz-comfyui-soya-custom-nodes/.git" ]; then
     echo ""
-    echo "[CLONE] comfyui-soya-custom-nodes..."
+    echo "[CLONE] zzz-comfyui-soya-custom-nodes..."
     if git clone -b "$SOYA_NODES_BRANCH" https://github.com/lbh848/Comfyui-soya-custom-nodes.git "$USER_NODES_DIR/comfyui-soya-custom-nodes"; then
         ok "soya-custom-nodes cloned"
     else
