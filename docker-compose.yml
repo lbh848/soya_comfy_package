@@ -7,6 +7,7 @@ services:
       context: ./comfyui
       dockerfile: Dockerfile
     image: soyaslave/comfypack-comfyui:latest
+    shm_size: "4gb"
     ports:
       - "${COMFYUI_PORT:-8188}:8188"
     volumes:
