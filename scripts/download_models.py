@@ -257,6 +257,19 @@ def ask(prompt, default=""):
         return default
 
 
+def _validate_safetensors(path):
+    """Verify safetensors file header is readable. Returns True if valid."""
+    if not path.endswith(".safetensors") or not os.path.isfile(path):
+        return True  # only check safetensors files
+    try:
+        from safetensors import safe_open
+        with safe_open(path, framework="pt"):
+            pass
+        return True
+    except Exception:
+        return False
+
+
 def _exists(category, name):
     """Check if any file matching name (with any extension) exists in category dir."""
     cat_dir = os.path.join(MODELS_DIR, category)
@@ -559,6 +572,13 @@ def download_file(url, dest, api_key=None):
                 return False
 
             os.rename(tmp, dest)
+
+            # Validate safetensors header
+            if dest.endswith(".safetensors") and not _validate_safetensors(dest):
+                print(f"    [!] File downloaded but safetensors header is corrupt. Removing.")
+                os.remove(dest)
+                return False
+
             print(f"    Done! ({human_size(final_size)})")
             return True
 
@@ -649,13 +669,17 @@ def cmd_status():
 
     print(f"\n  Model Status ({len(models)} tracked):\n")
 
-    found = missing = 0
+    found = missing = corrupt = 0
     for m in models:
         if m["relpath"]:
             fpath = os.path.join(MODELS_DIR, m["relpath"])
             if os.path.isfile(fpath):
-                tag = "OK "
-                found += 1
+                if fpath.endswith(".safetensors") and not _validate_safetensors(fpath):
+                    tag = "!! "
+                    corrupt += 1
+                else:
+                    tag = "OK "
+                    found += 1
             else:
                 tag = "   "
                 missing += 1
@@ -666,8 +690,12 @@ def cmd_status():
             # CivitAI model without hardcoded filename - check by name
             existing = find_existing_file(m["category"], m["name"])
             if existing:
-                tag = "OK "
-                found += 1
+                if existing.endswith(".safetensors") and not _validate_safetensors(existing):
+                    tag = "!! "
+                    corrupt += 1
+                else:
+                    tag = "OK "
+                    found += 1
                 size = human_size(os.path.getsize(existing))
             else:
                 tag = "   "
@@ -675,7 +703,7 @@ def cmd_status():
                 size = ""
             print(f"    [{tag}] {m['name']:<50s} [CivitAI] {size}")
 
-    print(f"\n    Found: {found} / {len(models)}   Missing: {missing}")
+    print(f"\n    Found: {found} / {len(models)}   Missing: {missing}   Corrupt: {corrupt}")
 
 
 def cmd_delete():
