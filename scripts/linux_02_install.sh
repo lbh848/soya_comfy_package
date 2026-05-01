@@ -13,6 +13,8 @@ NC='\033[0m'
 SOYA_NODES_BRANCH="v3.1"
 WF_CONVERTER_BRANCH="main"
 HOOKING_SERVER_BRANCH="main"
+MANAGER_COMMIT="66108ccd"
+LORA_MANAGER_COMMIT="055e94d7"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -169,6 +171,28 @@ if [ ! -d "$USER_NODES_DIR/comfyui-workflow-to-api-converter-endpoint/.git" ]; t
         ok "workflow-to-api-converter-endpoint cloned"
     else
         fail "Failed to clone workflow-to-api-converter-endpoint"
+    fi
+fi
+
+if [ ! -d "$USER_NODES_DIR/ComfyUI-Manager/.git" ]; then
+    echo ""
+    echo "[CLONE] ComfyUI-Manager pinned to $MANAGER_COMMIT..."
+    if git clone https://github.com/ltdrdata/ComfyUI-Manager.git "$USER_NODES_DIR/ComfyUI-Manager"; then
+        git -C "$USER_NODES_DIR/ComfyUI-Manager" checkout "$MANAGER_COMMIT"
+        ok "ComfyUI-Manager cloned"
+    else
+        fail "Failed to clone ComfyUI-Manager"
+    fi
+fi
+
+if [ ! -d "$USER_NODES_DIR/ComfyUI-Lora-Manager/.git" ]; then
+    echo ""
+    echo "[CLONE] ComfyUI-Lora-Manager pinned to $LORA_MANAGER_COMMIT..."
+    if git clone https://github.com/willmiao/ComfyUI-Lora-Manager.git "$USER_NODES_DIR/ComfyUI-Lora-Manager"; then
+        git -C "$USER_NODES_DIR/ComfyUI-Lora-Manager" checkout "$LORA_MANAGER_COMMIT"
+        ok "ComfyUI-Lora-Manager cloned"
+    else
+        fail "Failed to clone ComfyUI-Lora-Manager"
     fi
 fi
 
