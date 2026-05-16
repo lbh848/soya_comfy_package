@@ -22,7 +22,7 @@ RUN curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/downloa
 
 # ─── Base dependencies (cloned at build time for pip install) ──
 WORKDIR /app
-RUN git clone https://github.com/lbh848/comfyui_hooking_server.git /tmp/hooking_build \
+RUN git clone -b v3 https://github.com/lbh848/comfyui_hooking_server.git /tmp/hooking_build \
     && pip install --no-cache-dir -r /tmp/hooking_build/requirements.txt \
     && rm -rf /tmp/hooking_build
 

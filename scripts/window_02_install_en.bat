@@ -12,7 +12,7 @@ setlocal enabledelayedexpansion
 :: --- Branch Configuration (change these for deployment) ---
 set "SOYA_NODES_BRANCH=v3.1"
 set "WF_CONVERTER_BRANCH=main"
-set "HOOKING_SERVER_BRANCH=main"
+set "HOOKING_SERVER_BRANCH=v3"
 set "MANAGER_COMMIT=66108ccd"
 set "LORA_MANAGER_COMMIT=055e94d7"
 

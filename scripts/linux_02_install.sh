@@ -12,7 +12,7 @@ NC='\033[0m'
 # --- Branch Configuration (change these for deployment) ---
 SOYA_NODES_BRANCH="v3.1"
 WF_CONVERTER_BRANCH="main"
-HOOKING_SERVER_BRANCH="main"
+HOOKING_SERVER_BRANCH="v3"
 MANAGER_COMMIT="66108ccd"
 LORA_MANAGER_COMMIT="055e94d7"
 
